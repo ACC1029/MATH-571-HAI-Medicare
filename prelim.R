@@ -1,5 +1,7 @@
 library(tidyverse)
 
+#--loading raw data--#
+
 hai_raw <- read_csv("Healthcare_Associated_Infections_-_Hospital.csv",
                     na = c("", "NA"),
                     col_names = c(
@@ -29,9 +31,124 @@ hai_raw <- read_csv("Healthcare_Associated_Infections_-_Hospital.csv",
                     skip = 1
                     )
 
+hosp_gen_info_raw <- read_csv("Hospital_General_Information.csv",
+                              na = c("", "NA"),
+                              col_names = c(
+                                "provider_id", "hospital_name", "address", "city", "state", "zip_code", "county_name", 
+                                "phone_number", "hospital_type", "hospital_owner", "emergency_services", 
+                                "meets_meaningful_use", "hospital_overall_rating", "hospital_overall_rating_footnote",
+                                "mortality", "mortality_footnote", "safety_of_care", "safety_of_care_footnote", 
+                                "readmission", "readmission_footnote", "patient_experience", "patient_experience_footnote", 
+                                "effectiveness_of_care", "effectiveness_of_care_footnote", "timeliness_of_care", 
+                                "timeliness_of_care_footnote", "efficient_use_of_medical_imaging", 
+                                "efficient_use_of_medical_imaging_footnote", "location"
+                              ),
+                              col_types = cols(
+                                provider_id = col_integer(),
+                                hospital_name = col_character(),
+                                address = col_character(),
+                                city = col_character(),
+                                state = col_character(),
+                                zip_code = col_integer(),
+                                county_name = col_character(),
+                                phone_number = col_double(),
+                                hospital_type = col_character(),
+                                hospital_owner = col_character(),
+                                emergency_services = col_character(),
+                                meets_meaningful_use = col_character(),
+                                hospital_overall_rating = col_character(),
+                                hospital_overall_rating_footnote = col_character(),
+                                mortality = col_character(),
+                                mortality_footnote = col_character(),
+                                safety_of_care = col_character(),
+                                safety_of_care_footnote = col_character(),
+                                readmission = col_character(),
+                                readmission_footnote = col_character(),
+                                patient_experience = col_character(),
+                                patient_experience_footnote = col_character(),
+                                effectiveness_of_care = col_character(),
+                                effectiveness_of_care_footnote = col_character(),
+                                timeliness_of_care = col_character(),
+                                timeliness_of_care_footnote = col_character(),
+                                efficient_use_of_medical_imaging = col_character(),
+                                efficient_use_of_medical_imaging_footnote = col_character(),
+                                location = col_character()
+                              ),
+                              skip = 1
+)
+
+mspb_raw = read_csv("Medicare_Hospital_Spending_Per_Patient_-_Hospital.csv",
+                    na = c("", "NA"),
+                    col_names = c(
+                      "provider_id", "hospital_name", "address", "city", "state", "zip_code",
+                      "county_name", "phone_number", "measure_name", "measure_id", "score", 
+                      "footnote", "measure_start_date", "measure_end_date", "location"
+                    ),
+                    col_types = cols(
+                      provider_id = col_integer(),
+                      hospital_name = col_character(),
+                      address = col_character(),
+                      city = col_character(),
+                      state = col_character(),
+                      zip_code = col_integer(),
+                      county_name = col_character(),
+                      phone_number = col_double(),
+                      measure_name = col_character(),
+                      measure_id = col_character(),
+                      score = col_character(),
+                      footnote = col_character(),
+                      location = col_character(),
+                      measure_start_date = col_character(),
+                      measure_end_date = col_character()
+                    ),
+                    skip = 1
+)
+
+payment_value_care_raw <- read_csv("Payment_and_value_of_care_-_Hospital.csv",
+                                   na = c("", "NA"),
+                                   col_names = c(
+                                     "provider_id", "hospital_name", "address", "city", "state", "zip_code",
+                                     "county_name", "phone_number", "payment_measure_name", "payment_measure_id",
+                                     "payment_category", "denominator", "payment", "lower_estimate", 
+                                     "higher_estimate", "payment_footnote", "value_of_care_display_name",
+                                     "value_of_care_display_id", "value_of_care_category", "value_of_care_footnote",
+                                     "measure_start_date", "measure_end_date", "location"
+                                   ),
+                                   col_types = cols(
+                                     provider_id = col_integer(),
+                                     hospital_name = col_character(),
+                                     address = col_character(),
+                                     city = col_character(),
+                                     state = col_character(),
+                                     zip_code = col_integer(),
+                                     county_name = col_character(),
+                                     phone_number = col_double(),
+                                     payment_measure_name = col_character(),
+                                     payment_measure_id = col_character(),
+                                     payment_category = col_character(),
+                                     denominator = col_character(),
+                                     payment = col_character(),
+                                     lower_estimate = col_character(),
+                                     higher_estimate = col_character(),
+                                     payment_footnote = col_character(),
+                                     value_of_care_display_name = col_character(),
+                                     value_of_care_display_id = col_character(),
+                                     value_of_care_category = col_character(),
+                                     value_of_care_footnote = col_character(),
+                                     measure_start_date = col_character(),
+                                     measure_end_date = col_character(),
+                                     location = col_character()
+                                   ),
+                                   skip = 1
+)
+
+#--Exploration--#
+
+# HAI
+
 hai_reduced <- select(hai_raw, provider_id, state, measure_id, measure_name, compared_to_national, score)
 
-#break up measure into measure and its type
+# break up measure into measure and its type
 measure_type <- hai_reduced %>% 
   mutate("Measure" = substring(text = measure_id, first = 1, last = 5),
          "Type" = substring(text = measure_id, first = 7,last = length(measure_id)))
@@ -48,10 +165,10 @@ measure_type_SIR <- measure_type %>%
   filter(Type == "SIR" & score != "Not Available") %>%
   group_by(Measure)
 
-measure_type_SIR_proc <- measure_type %>%
+measure_type_SIR_prov <- measure_type %>%
   select(Measure, Type, score, provider_id) %>%
   filter(Type == "SIR" & score != "Not Available")
-measure_type_SIR_proc
+measure_type_SIR_prov
 
 HAI_1 <- measure_type_SIR %>%
   filter(Measure == "HAI_1")
@@ -60,7 +177,7 @@ ggplot(measure_type_SIR, (aes(Measure, as.double(score)))) +
   geom_boxplot() +
   labs(title = "SIR Score per Measure", x = "Measure", y = "Score")
 
-ggplot(measure_type_SIR_proc, aes(Measure)) + 
+ggplot(measure_type_SIR_prov, aes(Measure)) + 
   geom_bar() +
   labs(title = "Count of Providers Reporting per Measure", y = "Provider Count")
 
@@ -107,78 +224,15 @@ mean(ave_hosp_meas$n)
 prov_meas_score <- hai_reduced %>%
   select(provider_id, measure_id, score) %>%
   filter(score != "Not Available")
+prov_meas_score
 
 ggplot(data = prov_meas_score, mapping = aes(x = measure_id)) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
   ggtitle("Number of Providers with Scores per Measure ID")
 
-hospital_info_raw <- read_csv("https://data.medicare.gov/resource/rbry-mqwu.csv",
-                              na = c("", "NA"),
-                              col_types = cols(
-                              address = col_character(),
-                              city = col_character(),
-                              county_name = col_character(),
-                              effectiveness_of_care_national_comparison = col_character(),
-                              effectiveness_of_care_national_comparison_footnote = col_character(),
-                              efficient_use_of_medical_imaging_national_comparison = col_character(),
-                              efficient_use_of_medical_imaging_national_comparison_footnote = col_character(),
-                              emergency_services = col_character(),
-                              hospital_name = col_character(),
-                              hospital_overall_rating = col_integer(),
-                              hospital_overall_rating_footnote = col_character(),
-                              hospital_ownership = col_character(),
-                              hospital_type = col_character(),
-                              location = col_character(),
-                              location_address = col_character(),
-                              location_city = col_character(),
-                              location_state = col_character(),
-                              location_zip = col_integer(),
-                              meets_criteria_for_meaningful_use_of_ehrs = col_character(),
-                              mortality_national_comparison = col_character(),
-                              mortality_national_comparison_footnote = col_character(),
-                              patient_experience_national_comparison = col_character(),
-                              patient_experience_national_comparison_footnote = col_character(),
-                              phone_number = col_double(),
-                              phone_number_type = col_character(),
-                              provider_id = col_integer(),
-                              readmission_national_comparison = col_character(),
-                              readmission_national_comparison_footnote = col_character(),
-                              safety_of_care_national_comparison = col_character(),
-                              safety_of_care_national_comparison_footnote = col_character(),
-                              state = col_character(),
-                              timeliness_of_care_national_comparison = col_character(),
-                              timeliness_of_care_national_comparison_footnote = col_character(),
-                              zip_code = col_integer()
-                              )
-)
 
-mspb_raw = read_csv("Medicare_Hospital_Spending_Per_Patient_-_Hospital.csv",
-                    na = c("", "NA"),
-                    col_names = c(
-                      "provider_id", "hospital_name", "address", "city", "state", "zip_code",
-                      "county_name", "phone_number", "measure_name", "measure_id", "score", 
-                      "footnote", "measure_start_date", "measure_end_date", "location"
-                    ),
-                    col_types = cols(
-                      provider_id = col_integer(),
-                      hospital_name = col_character(),
-                      address = col_character(),
-                      city = col_character(),
-                      state = col_character(),
-                      zip_code = col_integer(),
-                      county_name = col_character(),
-                      phone_number = col_double(),
-                      measure_name = col_character(),
-                      measure_id = col_character(),
-                      score = col_character(),
-                      footnote = col_character(),
-                      location = col_character(),
-                      measure_start_date = col_character(),
-                      measure_end_date = col_character()
-                    ),
-                    skip = 1
-                    )
+#Spending per Patient #
 
 mspb_reduced <- select(mspb_raw, provider_id, measure_id, state, score)
 
@@ -190,3 +244,24 @@ ggplot(mspb_scores, aes(measure_id, as.double(score)), xlab = "Measure ID") +
   geom_boxplot() +
   labs(title = "Medicare spending per beneficiary scores", x = "Measure ID", y = "Score")
 
+
+# Hospital General Information #
+spec(hosp_gen_info_raw)
+
+# how many hospitals per state meet meaningful use?
+hosp_gen_info_mu_t <- hosp_gen_info_raw %>%
+  select(provider_id, meets_meaningful_use, state) %>%
+  filter(meets_meaningful_use == "true") %>%
+  group_by(state) %>%
+  count(state)
+hosp_gen_info_mu_t
+
+# how many hospitals per state?
+hosp_gen_info_raw %>%
+  select(provider_id, state) %>%
+  count(state)
+
+# what types of hospitals are there per state?
+hosp_gen_info_raw %>%
+  select(provider_id, hospital_type, state) %>%
+  count(state, hospital_type)
