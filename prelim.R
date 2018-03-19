@@ -142,16 +142,40 @@ payment_value_care_raw <- read_csv("Payment_and_value_of_care_-_Hospital.csv",
                                    skip = 1
 )
 
+hosp_gen_info_reduced <- select(hosp_gen_info_raw, -hospital_overall_rating_footnote, -mortality_footnote, 
+                                -safety_of_care_footnote, -readmission_footnote, -patient_experience_footnote, 
+                                -effectiveness_of_care_footnote, -timeliness_of_care_footnote,
+                                -efficient_use_of_medical_imaging_footnote)
+hai_reduced <- select(hai_raw, provider_id, measure_name, measure_id, compared_to_national, score)
+mspb_reduced <- select(mspb_raw, provider_id, score)
+pay_val_care_reduced <- select(payment_value_care_raw, provider_id, payment_measure_name, payment_measure_id,
+                               payment_category, denominator, payment, lower_estimate, higher_estimate,
+                               value_of_care_display_name, value_of_care_display_id, value_of_care_category,
+                               location)
+
+# join all the data together on provider_id
+all_data <- hosp_gen_info_reduced %>%  
+  inner_join(hai_reduced, by = c("provider_id" = "provider_id")) %>%
+  inner_join(pay_val_care_reduced, by = c("provider_id" = "provider_id")) %>%
+  inner_join(mspb_reduced, by = c("provider_id" = "provider_id"))
+
 #--Exploration--#
 
 # HAI
 
-hai_reduced <- select(hai_raw, provider_id, state, measure_id, measure_name, compared_to_national, score)
+hai_reduced %>%
+  select(provider_id, measure_id) %>%
+  count(measure_id)
+
+# need to spread out HAI measures
+spread_hai <- hai_reduced %>%
+  spread(measure_id, score)
 
 # break up measure into measure and its type
 measure_type <- hai_reduced %>% 
   mutate("Measure" = substring(text = measure_id, first = 1, last = 5),
          "Type" = substring(text = measure_id, first = 7,last = length(measure_id)))
+measure_type
 
 # 36 different measures
 measures <- unique(filter(hai_reduced)[,c("measure_id", "measure_name")])
@@ -232,36 +256,126 @@ ggplot(data = prov_meas_score, mapping = aes(x = measure_id)) +
   ggtitle("Number of Providers with Scores per Measure ID")
 
 
-#Spending per Patient #
-
-mspb_reduced <- select(mspb_raw, provider_id, measure_id, state, score)
+#-------Spending per Patient--------------#
 
 mspb_scores <- mspb_reduced %>%
   select(score, measure_id) %>%
   filter(score != "Not Available") 
+mspb_scores
 
 ggplot(mspb_scores, aes(measure_id, as.double(score)), xlab = "Measure ID") + 
   geom_boxplot() +
   labs(title = "Medicare spending per beneficiary scores", x = "Measure ID", y = "Score")
 
 
-# Hospital General Information #
-spec(hosp_gen_info_raw)
 
-# how many hospitals per state meet meaningful use?
-hosp_gen_info_mu_t <- hosp_gen_info_raw %>%
-  select(provider_id, meets_meaningful_use, state) %>%
-  filter(meets_meaningful_use == "true") %>%
-  group_by(state) %>%
-  count(state)
-hosp_gen_info_mu_t
+
+#---------Hospital General Information-----------#
+spec(hosp_gen_info_raw)
 
 # how many hospitals per state?
 hosp_gen_info_raw %>%
   select(provider_id, state) %>%
   count(state)
 
+# what types of hospitals are there and how many?
+hosp_gen_info_raw %>%
+  select(provider_id, hospital_type) %>%
+  count(hospital_type)
+
 # what types of hospitals are there per state?
 hosp_gen_info_raw %>%
   select(provider_id, hospital_type, state) %>%
   count(state, hospital_type)
+
+#what hospital owners are there and how many?
+hosp_gen_info_raw %>%
+  select(provider_id, hospital_owner) %>%
+  count(hospital_owner)
+
+# what types of hospital owners are there per state?
+hosp_gen_info_raw %>%
+  select(provider_id, hospital_owner, state) %>%
+  count(state, hospital_owner)
+
+# how many hospitals have emergency services?
+hosp_gen_info_raw %>%
+  select(provider_id, emergency_services) %>%
+  count(emergency_services)
+
+# how many hospitals meet meaningful use requirements?
+hosp_gen_info_raw %>%
+  select(provider_id, meets_meaningful_use) %>%
+  count(meets_meaningful_use)
+
+# what is the distribution of overall ratings?
+hosp_gen_info_raw %>%
+  select(provider_id, hospital_overall_rating) %>%
+  count(hospital_overall_rating)
+
+# what are the mortality comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, mortality) %>%
+  count(mortality)
+
+# what are the safety of care comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, safety_of_care) %>%
+  count(safety_of_care)
+
+# what are the readmission comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, readmission) %>%
+  count(readmission)
+
+# what are the patient experience comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, patient_experience) %>%
+  count(patient_experience)
+
+# what are the effectiveness of care comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, effectiveness_of_care) %>%
+  count(effectiveness_of_care)
+
+# what are the timeliness of care comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, timeliness_of_care) %>%
+  count(timeliness_of_care)
+
+# what are the efficient use of medical imaging of care comparisons?
+hosp_gen_info_raw %>%
+  select(provider_id, efficient_use_of_medical_imaging) %>%
+  count(efficient_use_of_medical_imaging)
+
+
+#-------Payment value of care--------#
+
+# what are the measure names?
+payment_value_care_raw %>%
+  select(provider_id, payment_measure_name) %>%
+  count(payment_measure_name)
+
+# what are the payment categories (comparisons)?
+payment_value_care_raw %>%
+  select(provider_id, payment_category) %>%
+  count(payment_category)
+
+# distribution of payment
+payment <- as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$payment)))
+
+ggplot(payment_value_care_raw, aes(provider_id, as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$payment))))) +
+         labs(x = "Provider ID", y = "Payment") + 
+  geom_boxplot() 
+
+# what are the value of care display names?
+payment_value_care_raw %>%
+  select(provider_id, value_of_care_display_name) %>%
+  count(value_of_care_display_name)
+
+# what are the value of care display ids?
+payment_value_care_raw %>%
+  select(provider_id, value_of_care_display_id) %>%
+  count(value_of_care_display_id)
+
+# 
