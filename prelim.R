@@ -142,13 +142,16 @@ payment_value_care_raw <- read_csv("Payment_and_value_of_care_-_Hospital.csv",
                                    skip = 1
 )
 
-hosp_gen_info_reduced <- select(hosp_gen_info_raw, -hospital_overall_rating_footnote, -mortality_footnote, 
-                                -safety_of_care_footnote, -readmission_footnote, -patient_experience_footnote, 
-                                -effectiveness_of_care_footnote, -timeliness_of_care_footnote,
-                                -efficient_use_of_medical_imaging_footnote)
-hai_reduced <- select(hai_raw, provider_id, measure_name, measure_id, compared_to_national, score)
-mspb_reduced <- select(mspb_raw, provider_id, score)
-pay_val_care_reduced <- select(payment_value_care_raw, provider_id, payment_measure_name, payment_measure_id,
+hosp_gen_info_reduced <- dplyr::select(hosp_gen_info_raw,-hospital_overall_rating_footnote, -mortality_footnote, 
+         -safety_of_care_footnote, -readmission_footnote, -patient_experience_footnote, 
+         -effectiveness_of_care_footnote, -timeliness_of_care_footnote,
+         -efficient_use_of_medical_imaging_footnote)
+
+hai_reduced <- dplyr::select(hai_raw, provider_id, measure_name, measure_id, compared_to_national, score)
+
+mspb_reduced <- dplyr::select(mspb_raw, provider_id, score)
+
+pay_val_care_reduced <- dplyr::select(payment_value_care_raw, provider_id, payment_measure_name, payment_measure_id,
                                payment_category, denominator, payment, lower_estimate, higher_estimate,
                                value_of_care_display_name, value_of_care_display_id, value_of_care_category,
                                location)
