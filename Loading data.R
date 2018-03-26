@@ -163,12 +163,22 @@ hai_reduced <- dplyr::select(hai_raw, provider_id, measure_name, measure_id, com
          score = replace(score, score == "Not Available", NA)) %>%
   arrange(provider_id, measure_id)
 
-mspb_reduced <- dplyr::select(mspb_raw, provider_id, score)
+mspb_reduced <- dplyr::select(mspb_raw, provider_id, score) %>%
+  mutate(score = replace(score, score == "Not Available", NA)) %>%
+  arrange(provider_id)
 
 pay_val_care_reduced <- dplyr::select(payment_value_care_raw, provider_id, payment_measure_name, payment_measure_id,
                                payment_category, denominator, payment, lower_estimate, higher_estimate,
                                value_of_care_display_name, value_of_care_display_id, value_of_care_category,
-                               location)
+                               location) %>%
+  mutate(payment_category = replace(payment_category, payment_category == "Not Available", NA),
+         denominator = replace(denominator, denominator == "Not Available", NA),
+         payment = replace(payment, payment == "Not Available", NA),
+         lower_estimate = replace(lower_estimate, lower_estimate == "Not Available", NA),
+         higher_estimate = replace(higher_estimate, higher_estimate == "Not Available", NA),
+         value_of_care_category = replace(value_of_care_category, value_of_care_category == "Not Available", NA)
+  ) %>%
+  arrange(provider_id, payment_measure_id)
 
 # join all the data together on provider_id
 all_data <- hosp_gen_info_reduced %>%  

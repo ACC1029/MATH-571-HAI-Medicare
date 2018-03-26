@@ -28,6 +28,7 @@ ggplot(hai_sir, (aes(Measure, as.double(score)))) +
   geom_boxplot() +
   labs(title = "SIR Score per Measure", x = "Measure", y = "Score")
 
+# TODO: remove NAs for this plot
 ggplot(hai_sir, aes(Measure)) + 
   geom_bar() +
   labs(title = "Count of Providers Reporting per Measure", y = "Provider Count")
@@ -46,7 +47,7 @@ hai_sir %>%
   group_by(Measure) %>%
   summarise(mean = mean(as.double(score)), sd = sd(as.double(score)),
             IQR = IQR(as.double(score)),
-            min = min(as.double(score)), max = max(as.double(score)),
+            min = min(as.double(score)), max = max(as.double(score))
             )
 
 #4,806 hospitals
@@ -57,13 +58,45 @@ hospitals
 measures <- unique(filter(hai_reduced)[,c("measure_id", "measure_name")])
 
 # 6 different SIR measures
-sir_measures <- unique(filter(measure_type, Type == "SIR")[,c("Measure", "measure_name")])
+sir_measures <- unique(filter(hai_reduced, Type == "SIR")[,c("Measure", "measure_name")])
 
 # how many measures are there per provider -- 36 for all
 hai_reduced %>%
   select(provider_id, measure_id) %>%
   group_by(provider_id) %>%
   count(provider_id)
+
+# how many measures per provider with reported score
+hai_reduced %>%
+  select(provider_id, measure_id, score) %>%
+  filter(!is.na(score)) %>%
+  group_by(provider_id) %>%
+  count(provider_id)
+
+# which Measure is missing the most scores?  --HAI 4 with 4038
+hai_sir %>%
+  filter(is.na(score)) %>%
+  select(Measure) %>%
+  group_by(Measure) %>%
+  count(Measure)
+
+# there are 1712 providers with no SIR scores  -- TODO: should we remove these providers altogether?
+hai_sir %>%
+  filter(is.na(score)) %>%
+  select(Measure, provider_id, score) %>%
+  count(score, provider_id) %>%
+  group_by(provider_id) %>%
+  arrange(desc(n)) %>%
+  filter(n == 6)
+
+# there are 2373 providers with at least one SIR score missing -- TODO: should we replace them with 0?
+hai_sir %>%
+  filter(is.na(score)) %>%
+  select(Measure, provider_id, score) %>%
+  count(score, provider_id) %>%
+  group_by(provider_id) %>%
+  arrange(desc(n)) %>%
+  filter(n < 6)
 
 prov_meas_score <- hai_sir %>%
   select(provider_id, measure_id, score) %>%

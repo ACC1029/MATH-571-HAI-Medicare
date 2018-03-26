@@ -128,3 +128,5 @@ dbWriteTable(mydb, "pay_val_care_reduced", pay_val_care_reduced)
 dbListTables(mydb)
 
 dbDisconnect(mydb)
+
+?tbl
