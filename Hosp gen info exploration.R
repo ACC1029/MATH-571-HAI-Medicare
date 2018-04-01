@@ -45,7 +45,7 @@ hosp_gen_info_reduced %>%
   select(provider_id, hospital_type, state) %>%
   count(state, hospital_type)
 
-#what hospital owners are there and how many?
+# what hospital owners are there and how many?
 hosp_gen_info_reduced %>%
   select(provider_id, hospital_owner) %>%
   count(hospital_owner)

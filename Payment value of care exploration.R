@@ -34,3 +34,5 @@ pay_val_care_reduced %>%
 pay_val_care_reduced %>%
   select(provider_id, value_of_care_category) %>%
   count(value_of_care_category)
+
+# TODO: should we sum the payments per hospital?
