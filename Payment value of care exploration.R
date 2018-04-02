@@ -5,6 +5,10 @@ pay_val_care_reduced <- pay_val_care_reduced %>%
          higher_estimate = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$higher_estimate)))
          )
 
+pay_val_care_reduced %>%
+  filter(is.na(location)) %>%
+  select(location)
+
 # what are the measure names?
 pay_val_care_reduced %>%
   select(provider_id, payment_measure_name) %>%

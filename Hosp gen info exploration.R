@@ -1,3 +1,7 @@
+hosp_gen_info_reduced %>%
+  filter(is.na(mortality)) %>%
+  select(mortality)
+
 # Recode variables with national comparisons
 hosp_gen_info_recoded <- hosp_gen_info_reduced %>%
   mutate(mortality_code = recode(mortality, 
