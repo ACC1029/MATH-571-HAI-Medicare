@@ -109,3 +109,35 @@ ggplot(data = prov_meas_score, mapping = aes(x = measure_id)) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
   ggtitle("Number of Providers with Scores per Measure ID")
+
+# find all measures that don't have a score, and see if they have a numerator and denominator
+## the numbers seem too small to conclusively say that the NAs can be replaced with 0
+no_score_measures <- hai_reduced_spread %>%
+  filter(is.na(SIR_score) & !is.na(ELIGCASES_score)) %>%
+  select(provider_id, SIR_score, ELIGCASES_score, NUMERATOR_score)
+  arrange(provider_id)
+  no_score_measures
+
+yes_score_measures <- hai_reduced_spread %>%
+  filter(!is.na(SIR_score)) %>%
+  select(provider_id, SIR_score, ELIGCASES_score, NUMERATOR_score)
+arrange(provider_id)
+yes_score_measures
+
+# remove providers that have no SIR scores at all
+no_score_providers <- hai_sir %>%
+  filter(is.na(score)) %>%
+  select(Measure, provider_id, score) %>%
+  count(score, provider_id) %>%
+  group_by(provider_id) %>%
+  arrange(desc(n)) %>%
+  filter(n == 6)
+
+hai_reduced_spread_nona <- hai_reduced_spread %>%
+  left_join(no_score_providers, by = "provider_id") %>%
+  filter(is.na(n))
+
+# HAI missing
+
+hai_reduced_spread %>%
+  filter(Measure == "HAI_6" & is.na(SIR_score))

@@ -24,19 +24,19 @@ df %>%
 
 # Step 1: Make new identifier for provider-HAI type that we can use to get a row for each type per provider
 hai_reduced %>%
-  filter(provider_id == 10001) %>%
+  filter(provider_id == 10005) %>%
   unite(provider_hai, provider_id, Measure) 
 
 # Step 2: Gather
 hai_reduced_gather <- hai_reduced %>%
-  filter(provider_id == 10001) %>%
+  # filter(provider_id == 670112) %>%
   unite(provider_hai, provider_id, Measure) %>%
   select(provider_hai, Type, score, compared_to_national) %>%
   gather(variable, value, -(provider_hai:Type))
 
 # Step 3: Unite
 hai_reduced_unite <- hai_reduced %>%
-  filter(provider_id == 10001) %>%
+  # filter(provider_id == 670112) %>%
   unite(provider_hai, provider_id, Measure) %>%
   select(provider_hai, Type, score, compared_to_national) %>%
   gather(variable, value, -(provider_hai:Type)) %>%
@@ -44,7 +44,7 @@ hai_reduced_unite <- hai_reduced %>%
 
 # Step 4: Spread
 hai_reduced_spread <- hai_reduced %>%
-  filter(provider_id == 10001) %>%
+  # filter(provider_id == 670112) %>%
   unite(provider_hai, provider_id, Measure) %>%
   select(provider_hai, Type, score, compared_to_national) %>%
   gather(variable, value, -(provider_hai:Type)) %>%
@@ -53,6 +53,18 @@ hai_reduced_spread <- hai_reduced %>%
 
 #Step 5: Break out provider-type again and drop provider-type column
 hai_reduced_spread <- hai_reduced_spread %>%
-  mutate("provider_id"= substring(text = provider_hai, first = 1, last = 5),
-           "Type" = substring(text = provider_hai, first = 7, last = 11)) %>%
-  select(provider_id, Type, everything(), -provider_hai)
+  mutate("provider_id"= as.integer(str_sub(provider_hai, 1, unlist(lapply(strsplit(provider_hai, ''),
+                                                                          function(provider_hai) which(provider_hai == '_')))[c(TRUE,FALSE)]-1)),
+         "Measure" = str_sub(provider_hai, unlist(lapply(strsplit(provider_hai, ''),
+                                                      function(provider_hai) which(provider_hai == '_')))[c(TRUE,FALSE)]+1, 
+                          str_length(provider_hai)),
+         CI_LOWER_score = as.double(CI_LOWER_score),
+         CI_UPPER_score = as.double(CI_UPPER_score),
+         DOPC_DAYS_score = as.integer(DOPC_DAYS_score),
+         ELIGCASES_score = as.double(ELIGCASES_score),
+         NUMERATOR_score = as.integer(NUMERATOR_score),
+         SIR_score = as.double(SIR_score)) %>%
+  select(provider_id, Measure, everything(), -provider_hai) %>%
+  arrange(provider_id)
+
+hai_reduced_spread
