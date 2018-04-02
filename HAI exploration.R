@@ -1,3 +1,6 @@
+hai_reduced %>%
+  # filter(is.na(Measure)) %>%
+  select(Measure)
 
 # break up measure into measure and its type
 hai_reduced <- hai_reduced %>% 
