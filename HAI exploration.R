@@ -116,7 +116,7 @@ no_score_measures <- hai_reduced_spread %>%
   filter(is.na(SIR_score) & !is.na(ELIGCASES_score)) %>%
   select(provider_id, SIR_score, ELIGCASES_score, NUMERATOR_score)
   arrange(provider_id)
-  no_score_measures
+no_score_measures
 
 yes_score_measures <- hai_reduced_spread %>%
   filter(!is.na(SIR_score)) %>%
@@ -136,6 +136,7 @@ no_score_providers <- hai_sir %>%
 hai_reduced_spread_nona <- hai_reduced_spread %>%
   left_join(no_score_providers, by = "provider_id") %>%
   filter(is.na(n))
+
 
 # HAI missing
 

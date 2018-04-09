@@ -164,7 +164,8 @@ hai_reduced <- dplyr::select(hai_raw, provider_id, measure_name, measure_id, com
   arrange(provider_id, measure_id)
 
 mspb_reduced <- dplyr::select(mspb_raw, provider_id, score) %>%
-  mutate(score = replace(score, score == "Not Available", NA)) %>%
+  mutate(score = replace(score, score == "Not Available", NA),
+         score = as.double(score)) %>%
   arrange(provider_id)
 
 pay_val_care_reduced <- dplyr::select(payment_value_care_raw, provider_id, payment_measure_name, payment_measure_id,

@@ -15,7 +15,7 @@ mspb_reduced %>%
 # mean score excluding NA rows
 mspb_reduced %>%
   filter(!is.na(score)) %>%
-  summarise(mean = mean(as.double(score)), sd = sd(as.double(score)),
+  summarise(mean = mean(score), sd = sd(as.double(score)),
             median = median(as.double(score)),
             IQR = IQR(as.double(score)),
             min = min(as.double(score)), max = max(as.double(score))
