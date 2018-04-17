@@ -9,7 +9,7 @@
   # sir score compared to national
 
 
-# combine all the data for providers with HAI 6 SIR scores and pneumonia payment category
+# combine all the data for providers with HAI 6 SIR scores and pneumonia payment category, no tribal or childrens
 hai_6_all_data <- hai_reduced_spread_nona %>%
   inner_join(hosp_gen_info_recoded, by = "provider_id") %>%
   inner_join(mspb_reduced, by = "provider_id") %>%
@@ -19,19 +19,21 @@ hai_6_all_data <- hai_reduced_spread_nona %>%
          patient_experience_code, SIR_compared_to_national_code, SIR_score, spend_score, payment, 
          value_of_care_category_code
          ) %>%
-  filter(Measure == "HAI_6" & !is.na(SIR_score) & payment_measure_id == "PAYM_30_PN") %>%
+  filter(Measure == "HAI_6" & !is.na(SIR_score) & payment_measure_id == "PAYM_30_PN", 
+         hospital_owner != "Tribal" & hospital_type != "Childrens") %>%
+  transform(hospital_overall_rating = as.numeric(hospital_overall_rating)) %>%
   arrange(provider_id)
 
 # change NA to means and modes
 hai_6_all_data_nona <- hai_6_all_data %>%
   # filter(provider_id == 30078) %>%
-  replace_na(list(hospital_overall_rating = "3", mortality_code = 0, spend_score = 0.99, payment = 17163, 
+  replace_na(list(hospital_overall_rating = 3, mortality_code = 0, spend_score = 0.99, payment = 17163, 
                   mortality_code = 0, readmission_code = 1, effectiveness_of_care_code = 0, timeliness_of_care_code = 0,
                   patient_experience_code = -1, SIR_compared_to_national_code = 0, value_of_care_category_code = 0))
 
 
 glimpse(hai_6_all_data_nona)
-
+sapply(hai_6_all_data_nona, class)
 
 # means:
 ## overall mean of payment, spending score, and overall hospital rating
@@ -60,3 +62,52 @@ cat_modes <- hai_6_all_data %>%
   filter(n == max(n)) %>%
   select(mortality_code, readmission_code, effectiveness_of_care_code, timeliness_of_care_code,
          patient_experience_code, SIR_compared_to_national_code, value_of_care_category_code)
+
+# make correlation matrix
+library(corrplot)
+
+# all predictors
+predictors <- hai_6_all_data_nona %>%
+  select(overall_rating = hospital_overall_rating, mortality = mortality_code, readmission = readmission_code,
+         effectiveness = effectiveness_of_care_code, timeliness = timeliness_of_care_code, 
+         pat_experience = patient_experience_code, sir_compare = SIR_compared_to_national_code, 
+         spend_score, payment, value_cat = value_of_care_category_code)
+
+# minus overall rating
+predictors <- hai_6_all_data_nona %>%
+  select(mortality = mortality_code, readmission = readmission_code,
+         effectiveness = effectiveness_of_care_code, timeliness = timeliness_of_care_code, 
+         pat_experience = patient_experience_code, sir_compare = SIR_compared_to_national_code, 
+         spend_score, payment, value_cat = value_of_care_category_code)
+
+# minus payment
+predictors <- hai_6_all_data_nona %>%
+  select(mortality = mortality_code, readmission = readmission_code,
+         effectiveness = effectiveness_of_care_code, timeliness = timeliness_of_care_code, 
+         pat_experience = patient_experience_code, sir_compare = SIR_compared_to_national_code, 
+         spend_score, value_cat = value_of_care_category_code)
+
+# minus value of care category
+predictors <- hai_6_all_data_nona %>%
+  select(mortality = mortality_code, readmission = readmission_code,
+         effectiveness = effectiveness_of_care_code, timeliness = timeliness_of_care_code, 
+         pat_experience = patient_experience_code, sir_compare = SIR_compared_to_national_code, 
+         spend_score)
+
+M <- cor(predictors)
+corrplot(M, type = "lower", order = "hclust", tl.col = "black", tl.srt = 45)
+
+hai_6_all_data_nona_nocor <- hai_6_all_data_nona %>%
+  select(SIR_score, hospital_type, hospital_owner, mortality = mortality_code, readmission = readmission_code,
+         effectiveness = effectiveness_of_care_code, timeliness = timeliness_of_care_code, 
+         pat_experience = patient_experience_code, sir_compare = SIR_compared_to_national_code, 
+         spend_score)
+
+glimpse(hai_6_all_data_nona_nocor)
+
+initial_fit <- lm(SIR_score ~ ., data = hai_6_all_data_nona_nocor)
+summary(initial_fit)
+
+install.packages("car")
+
+car::vif(initial_fit)
