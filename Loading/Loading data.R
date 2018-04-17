@@ -81,7 +81,7 @@ mspb_raw = read_csv("Medicare_Hospital_Spending_Per_Patient_-_Hospital.csv",
                     na = c("", "NA"),
                     col_names = c(
                       "provider_id", "hospital_name", "address", "city", "state", "zip_code",
-                      "county_name", "phone_number", "measure_name", "measure_id", "score", 
+                      "county_name", "phone_number", "measure_name", "measure_id", "spend_score", 
                       "footnote", "measure_start_date", "measure_end_date", "location"
                     ),
                     col_types = cols(
@@ -163,15 +163,14 @@ hai_reduced <- dplyr::select(hai_raw, provider_id, measure_name, measure_id, com
          score = replace(score, score == "Not Available", NA)) %>%
   arrange(provider_id, measure_id)
 
-mspb_reduced <- dplyr::select(mspb_raw, provider_id, score) %>%
-  mutate(score = replace(score, score == "Not Available", NA),
-         score = as.double(score)) %>%
+mspb_reduced <- dplyr::select(mspb_raw, provider_id, spend_score) %>%
+  mutate(spend_score = replace(spend_score, spend_score == "Not Available", NA),
+         spend_score = as.double(spend_score)) %>%
   arrange(provider_id)
 
-pay_val_care_reduced <- dplyr::select(payment_value_care_raw, provider_id, payment_measure_name, payment_measure_id,
+pay_val_care_reduced <- dplyr::select(payment_value_care_raw, provider_id, payment_measure_id,
                                payment_category, denominator, payment, lower_estimate, higher_estimate,
-                               value_of_care_display_name, value_of_care_display_id, value_of_care_category,
-                               location) %>%
+                               value_of_care_display_id, value_of_care_category) %>%
   mutate(payment_category = replace(payment_category, payment_category == "Not Available", NA),
          denominator = replace(denominator, denominator == "Not Available", NA),
          payment = replace(payment, payment == "Not Available", NA),

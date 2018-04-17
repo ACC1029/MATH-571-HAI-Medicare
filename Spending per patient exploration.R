@@ -1,6 +1,6 @@
 mspb_reduced %>%
-  filter(is.na(score)) %>%
-  select(score)
+  filter(is.na(score))
+  
 
 # there are 3152 providers with scores
 mspb_reduced %>%

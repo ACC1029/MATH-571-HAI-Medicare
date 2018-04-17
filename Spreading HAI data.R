@@ -29,14 +29,14 @@ hai_reduced %>%
 
 # Step 2: Gather
 hai_reduced_gather <- hai_reduced %>%
-  # filter(provider_id == 670112) %>%
+  filter(provider_id == 10005) %>%
   unite(provider_hai, provider_id, Measure) %>%
   select(provider_hai, Type, score, compared_to_national) %>%
   gather(variable, value, -(provider_hai:Type))
 
 # Step 3: Unite
 hai_reduced_unite <- hai_reduced %>%
-  # filter(provider_id == 670112) %>%
+  filter(provider_id == 10005) %>%
   unite(provider_hai, provider_id, Measure) %>%
   select(provider_hai, Type, score, compared_to_national) %>%
   gather(variable, value, -(provider_hai:Type)) %>%
@@ -44,7 +44,7 @@ hai_reduced_unite <- hai_reduced %>%
 
 # Step 4: Spread
 hai_reduced_spread <- hai_reduced %>%
-  # filter(provider_id == 670112) %>%
+  # filter(provider_id == 10005) %>%
   unite(provider_hai, provider_id, Measure) %>%
   select(provider_hai, Type, score, compared_to_national) %>%
   gather(variable, value, -(provider_hai:Type)) %>%

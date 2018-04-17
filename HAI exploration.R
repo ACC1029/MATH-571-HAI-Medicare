@@ -133,6 +133,15 @@ no_score_providers <- hai_sir %>%
   arrange(desc(n)) %>%
   filter(n == 6)
 
+# recode compared to national
+hai_reduced_spread <- hai_reduced_spread %>%
+  mutate(SIR_compared_to_national_code = recode(SIR_compared_to_national, 
+                                            "No Different than National Benchmark" = 0,
+                                            "Better than the National Benchmark" = 1,
+                                            "Worse than the National Benchmark" = -1))
+
+
+# filter down to rows that are populated
 hai_reduced_spread_nona <- hai_reduced_spread %>%
   left_join(no_score_providers, by = "provider_id") %>%
   filter(is.na(n))
