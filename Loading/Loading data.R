@@ -95,7 +95,7 @@ mspb_raw = read_csv("Medicare_Hospital_Spending_Per_Patient_-_Hospital.csv",
                       phone_number = col_double(),
                       measure_name = col_character(),
                       measure_id = col_character(),
-                      score = col_character(),
+                      spend_score = col_character(),
                       footnote = col_character(),
                       location = col_character(),
                       measure_start_date = col_character(),
@@ -179,6 +179,136 @@ pay_val_care_reduced <- dplyr::select(payment_value_care_raw, provider_id, payme
          value_of_care_category = replace(value_of_care_category, value_of_care_category == "Not Available", NA)
   ) %>%
   arrange(provider_id, payment_measure_id)
+
+# HAI: break up measure into measure and its type
+hai_reduced <- hai_reduced %>% 
+  mutate("Measure" = substring(text = measure_id, first = 1, last = 5),
+         "Type" = substring(text = measure_id, first = 7, last = length(measure_id)))
+
+# HAI: Spread
+hai_reduced_spread <- hai_reduced %>%
+  # filter(provider_id == 10005) %>%
+  unite(provider_hai, provider_id, Measure) %>%
+  select(provider_hai, Type, score, compared_to_national) %>%
+  gather(variable, value, -(provider_hai:Type)) %>%
+  unite(temp, Type, variable) %>%
+  spread(temp, value)
+
+## Break out provider-type again and drop provider-type column
+hai_reduced_spread <- hai_reduced_spread %>%
+  mutate("provider_id"= as.integer(str_sub(provider_hai, 1, unlist(lapply(strsplit(provider_hai, ''),
+                                                                          function(provider_hai) which(provider_hai == '_')))[c(TRUE,FALSE)]-1)),
+         "Measure" = str_sub(provider_hai, unlist(lapply(strsplit(provider_hai, ''),
+                                                         function(provider_hai) which(provider_hai == '_')))[c(TRUE,FALSE)]+1, 
+                             str_length(provider_hai)),
+         CI_LOWER_score = as.double(CI_LOWER_score),
+         CI_UPPER_score = as.double(CI_UPPER_score),
+         DOPC_DAYS_score = as.integer(DOPC_DAYS_score),
+         ELIGCASES_score = as.double(ELIGCASES_score),
+         NUMERATOR_score = as.integer(NUMERATOR_score),
+         SIR_score = as.double(SIR_score)) %>%
+  select(provider_id, Measure, everything(), -provider_hai) %>%
+  arrange(provider_id)
+
+# remove rows other than for SIR measures
+hai_sir <- hai_reduced %>%
+  filter(Type == "SIR")
+
+# HAI: remove providers that have no SIR scores at all
+no_score_providers <- hai_sir %>%
+  filter(is.na(score)) %>%
+  select(Measure, provider_id, score) %>%
+  count(score, provider_id) %>%
+  group_by(provider_id) %>%
+  arrange(desc(n)) %>%
+  filter(n == 6)
+
+# HAI: recode compared to national
+hai_reduced_spread <- hai_reduced_spread %>%
+  mutate(SIR_compared_to_national_code = recode(SIR_compared_to_national, 
+                                                "No Different than National Benchmark" = 0,
+                                                "Better than the National Benchmark" = 1,
+                                                "Worse than the National Benchmark" = -1)
+         )
+
+
+# HAI: filter down to rows that are populated
+hai_reduced_spread_nona <- hai_reduced_spread %>%
+  left_join(no_score_providers, by = "provider_id") %>%
+  filter(is.na(n))
+
+# Hosp gen info: Recode variables with national comparisons
+hosp_gen_info_recoded <- hosp_gen_info_reduced %>%
+  mutate(mortality_code = recode(mortality, 
+                                 "Above the national average" = 1,
+                                 "Same as the national average" = 0, 
+                                 "Below the national average" = -1),
+         safety_of_care_code = recode(safety_of_care,
+                                      "Above the national average" = 1,
+                                      "Same as the national average" = 0,
+                                      "Below the national average" = -1),
+         patient_experience_code = recode(patient_experience,
+                                          "Above the national average" = 1,
+                                          "Same as the national average" = 0,
+                                          "Below the national average" = -1),
+         timeliness_of_care_code = recode(timeliness_of_care,
+                                          "Above the national average" = 1,
+                                          "Same as the national average" = 0,
+                                          "Below the national average" = -1),
+         readmission_code = recode(readmission,
+                                   "Above the national average" = 1,
+                                   "Same as the national average" = 0,
+                                   "Below the national average" = -1),
+         effectiveness_of_care_code = recode(effectiveness_of_care,
+                                             "Above the national average" = 1,
+                                             "Same as the national average" = 0,
+                                             "Below the national average" = -1),
+         efficient_use_of_medical_imaging_code = recode(efficient_use_of_medical_imaging,
+                                                        "Above the national average" = 1,
+                                                        "Same as the national average" = 0,
+                                                        "Below the national average" = -1)
+  )
+
+# Payment value of care: makes dollar numeric and break up measures into measure and their types
+pay_val_care_reduced <- pay_val_care_reduced %>% 
+  mutate(payment = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$payment))),
+         lower_estimate = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$lower_estimate))),
+         higher_estimate = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$higher_estimate))),
+         "payment_measure" = substring(text = payment_measure_id, first = 1, last = 7),
+         "payment_type" = substring(text = payment_measure_id, first = 9, last = length(payment_measure_id)),
+         "value_of_care_measure" = substring(text = value_of_care_display_id, first = 1, last = 12),
+         "value_of_care_type" = substring(text = value_of_care_display_id, first = 14, last = length(value_of_care_display_id))
+  )
+
+# Payment value of care: Recode ordered categories. I think it's ok to ignore payment level in value of care category because it's captured in the payment category.
+pay_val_care_recoded <- pay_val_care_reduced %>%
+  mutate(payment_category_code = recode(payment_category,
+                                        "Greater than the National Average Payment" = 1,
+                                        "No different than the national average payment" = 0,
+                                        "Less than the National Average Payment" = -1,
+                                        "Number of Cases Too Small" = -2),
+         value_of_care_category_code = recode(value_of_care_category,
+                                              "Average complications and higher payment" = 0,
+                                              "Average complications and average payment" = 0,
+                                              "Average complications and lower payment " = 0,
+                                              "Average mortality and higher payment" = 0,
+                                              "Average mortality and average payment" = 0,
+                                              "Average mortality and lower payment" = 0,
+                                              "Better complications and higher payment" = 1,
+                                              "Better complications and average payment" = 1,
+                                              "Better complications and lower payment" = 1,
+                                              "Better mortality and higher payment" = 1,
+                                              "Better mortality and average payment" = 1,
+                                              "Better mortality and lower payment" = 1,
+                                              "Worse complications and higher payment" = -1,
+                                              "Worse complications and average payment" = -1,
+                                              "Worse complications and lower payment" = -1,
+                                              "Worse mortality and higher payment" = -1,
+                                              "Worse mortality and average payment" = -1,
+                                              "Worse mortality and lower payment" = -1
+         )
+  ) %>%
+  mutate(payment_category_code = replace(payment_category_code, payment_category_code == -2, NA))
 
 # join all the data together on provider_id
 all_data <- hosp_gen_info_reduced %>%  

@@ -2,38 +2,6 @@ hosp_gen_info_reduced %>%
   filter(is.na(mortality)) %>%
   select(mortality)
 
-# Recode variables with national comparisons
-hosp_gen_info_recoded <- hosp_gen_info_reduced %>%
-  mutate(mortality_code = recode(mortality, 
-                                 "Above the national average" = 1,
-                                 "Same as the national average" = 0, 
-                                 "Below the national average" = -1),
-         safety_of_care_code = recode(safety_of_care,
-                                      "Above the national average" = 1,
-                                      "Same as the national average" = 0,
-                                      "Below the national average" = -1),
-         patient_experience_code = recode(patient_experience,
-                                          "Above the national average" = 1,
-                                          "Same as the national average" = 0,
-                                          "Below the national average" = -1),
-         timeliness_of_care_code = recode(timeliness_of_care,
-                                          "Above the national average" = 1,
-                                          "Same as the national average" = 0,
-                                          "Below the national average" = -1),
-         readmission_code = recode(readmission,
-                                   "Above the national average" = 1,
-                                   "Same as the national average" = 0,
-                                   "Below the national average" = -1),
-         effectiveness_of_care_code = recode(effectiveness_of_care,
-                                             "Above the national average" = 1,
-                                             "Same as the national average" = 0,
-                                             "Below the national average" = -1),
-         efficient_use_of_medical_imaging_code = recode(efficient_use_of_medical_imaging,
-                                                        "Above the national average" = 1,
-                                                        "Same as the national average" = 0,
-                                                        "Below the national average" = -1)
-  )
-
 # how many hospitals per state?
 hosp_gen_info_reduced %>%
   select(provider_id, state) %>%
