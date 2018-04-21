@@ -229,7 +229,8 @@ hai_reduced_spread <- hai_reduced_spread %>%
                                                 "No Different than National Benchmark" = 0,
                                                 "Better than the National Benchmark" = 1,
                                                 "Worse than the National Benchmark" = -1)
-         )
+         ) %>%
+  mutate(SIR_compared_to_national_code = factor(SIR_compared_to_national_code))
 
 
 # HAI: filter down to rows that are populated
@@ -267,7 +268,12 @@ hosp_gen_info_recoded <- hosp_gen_info_reduced %>%
                                                         "Above the national average" = 1,
                                                         "Same as the national average" = 0,
                                                         "Below the national average" = -1)
-  )
+  ) %>%
+  mutate(mortality_code = factor(mortality_code), safety_of_care_code = factor(safety_of_care_code),
+         patient_experience_code =  factor(patient_experience_code), 
+         timeliness_of_care_code = factor(timeliness_of_care_code), 
+         readmission_code = factor(readmission_code), effectiveness_of_care_code = factor(effectiveness_of_care_code),
+         efficient_use_of_medical_imaging_code = factor(efficient_use_of_medical_imaging_code)) 
 
 # Payment value of care: makes dollar numeric and break up measures into measure and their types
 pay_val_care_reduced <- pay_val_care_reduced %>% 
@@ -308,10 +314,13 @@ pay_val_care_recoded <- pay_val_care_reduced %>%
                                               "Worse mortality and lower payment" = -1
          )
   ) %>%
-  mutate(payment_category_code = replace(payment_category_code, payment_category_code == -2, NA))
+  mutate(payment_category_code = replace(payment_category_code, payment_category_code == -2, NA),
+         payment_category_code = factor(payment_category_code),
+         value_of_care_category_code = factor(value_of_care_category_code))
 
 # join all the data together on provider_id
 all_data <- hosp_gen_info_reduced %>%  
   inner_join(hai_reduced, by = c("provider_id" = "provider_id")) %>%
   inner_join(pay_val_care_reduced, by = c("provider_id" = "provider_id")) %>%
   inner_join(mspb_reduced, by = c("provider_id" = "provider_id"))
+
