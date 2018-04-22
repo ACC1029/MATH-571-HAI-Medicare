@@ -8,7 +8,7 @@ library(ggplot2)
 #trying this will all features to begin with and will repeat with the correlated variables removed 
 ###############load
 #load the CSV provided by Anna, housed in the git repository, as a tibble
-hai_6_all_data_nona <- read_csv("hai_6_all_data_nona.csv")
+#hai_6_all_data_nona <- read_csv("hai_6_all_data_nona.csv")
 
 
 ###############make sure the categorical values are factors
@@ -24,33 +24,33 @@ hai_6_all_data_nona <- read_csv("hai_6_all_data_nona.csv")
 ###############recode
 #look at the distribution of scores
 hai_6_all_data_nona %>%
-  select(provider_id, SIR_score) %>%
-  count(SIR_score)
+  select(provider_id, sir_score) %>%
+  count(sir_score)
 
-min(hai_6_all_data_nona$SIR_score)
+min(hai_6_all_data_nona$sir_score)
 #0
-max(hai_6_all_data_nona$SIR_score)
+max(hai_6_all_data_nona$sir_score)
 #5.219
-median(hai_6_all_data_nona$SIR_score)
+median(hai_6_all_data_nona$sir_score)
 #.83
-mean(hai_6_all_data_nona$SIR_score)
+mean(hai_6_all_data_nona$sir_score)
 #.863589
 
-ggplot(data=hai_6_all_data_nona, aes(hai_6_all_data_nona$SIR_score)) + 
+ggplot(data=hai_6_all_data_nona, aes(hai_6_all_data_nona$sir_score)) + 
   theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
 
 #are there any that are exactly = the mean?
 hai_6_all_data_nona %>%
-  select(provider_id,SIR_score) %>%
-  filter(SIR_score == mean(hai_6_all_data_nona$SIR_score)) 
+  select(provider_id,sir_score) %>%
+  filter(sir_score == mean(hai_6_all_data_nona$sir_score)) 
 #no there are none that are exactly equal to the mean
 
 #recode
 #http://rprogramming.net/recode-data-in-r/
 hai_6_nona_recoded <- hai_6_all_data_nona
 hai_6_nona_recoded$above_avg_score <- NA
-hai_6_nona_recoded$above_avg_score[hai_6_nona_recoded$SIR_score > mean(hai_6_all_data_nona$SIR_score)] <- TRUE
-hai_6_nona_recoded$above_avg_score[hai_6_nona_recoded$SIR_score < mean(hai_6_all_data_nona$SIR_score)] <- FALSE
+hai_6_nona_recoded$above_avg_score[hai_6_nona_recoded$sir_score > mean(hai_6_all_data_nona$sir_score)] <- TRUE
+hai_6_nona_recoded$above_avg_score[hai_6_nona_recoded$sir_score < mean(hai_6_all_data_nona$sir_score)] <- FALSE
 
 hai_6_nona_recoded %>%
   select(provider_id,above_avg_score) %>%
@@ -131,14 +131,14 @@ ggplot(data=hai_6_testing, aes(hai_6_testing$mortality)) +
 # geom_histogram(data = hai_6_all_data_nona, stat = "count", fill = "green", alpha = 0.2)  
 
 ###############create the logistic regression with all the factors
-form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + hai_6_training$hospital_rating + hai_6_training$mortality 
+form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + hai_6_training$hospital_type + hai_6_training$hospital_rating + hai_6_training$mortality 
   + hai_6_training$readmission + hai_6_training$effectiveness + hai_6_training$timeliness 
   + hai_6_training$spend_score + hai_6_training$payment + hai_6_training$val_care_cat
 
   
 fit_all_fact <- glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training)
 summary(fit_all_fact)
-
+#AIC: 3397.6
 
 #look at it!
 plot(fit_all_fact)
@@ -146,11 +146,38 @@ plot(fit_all_fact)
 ###############predict
 
 pred_all_fact <- predict(fit_all_fact, type="response")
-cfm <- confusionMatrix(pred_all_fact, hai_6_training$above_avg_score)
-table(pred = pred_all_fact, true = hai_6_training$above_avg_score)
+#cfm <- confusionMatrix(pred_all_fact, hai_6_training$above_avg_score)
+#table(pred = pred_all_fact, true = hai_6_training$above_avg_score)
+pred_all_fact
 
+#tf_pred_for_step <- pred_for_step
+all_predictions <- ifelse(pred_all_fact > 0.5, TRUE, FALSE) 
+all_predictions
+train_all_cfm <- confusionMatrix(all_predictions, hai_6_training$above_avg_score)
+train_all_cfm
+# Confusion Matrix and Statistics
+# 
+# Reference
+# Prediction FALSE TRUE
+# FALSE  1173  959
+# TRUE    147  177
+# 
+# Accuracy : 0.5497          
+# 95% CI : (0.5297, 0.5695)
+# No Information Rate : 0.5375          
+# P-Value [Acc > NIR] : 0.116
 
 ###############test predictions
+test_pred_all_fact <- predict(fit_all_fact, newdata = hai_6_testing, type="response")
+#cfm <- confusionMatrix(pred_all_fact, hai_6_training$above_avg_score)
+#table(pred = pred_all_fact, true = hai_6_training$above_avg_score)
+test_pred_all_fact
+
+#tf_pred_for_step <- pred_for_step
+test_all_predictions <- ifelse(test_pred_all_fact > 0.5, TRUE, FALSE) 
+test_all_predictions
+test_all_cfm <- confusionMatrix(test_all_predictions, hai_6_testing$above_avg_score)
+test_all_cfm
 
 ###############validate the fit
 
@@ -163,9 +190,12 @@ table(pred = pred_all_fact, true = hai_6_training$above_avg_score)
 
 
 fit_for_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training), direction = "forward")
-# AIC=3396.51
+# Start:  AIC=3397.6
 # hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + 
-#   hai_6_training$hospital_rating + hai_6_training$mortality
+#   hai_6_training$hospital_type + hai_6_training$hospital_rating + 
+#   hai_6_training$mortality
+
+
 
 summary(fit_for_step)
 
@@ -187,14 +217,14 @@ plot(fit_for_step)
 
 
 fit_back_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training), direction = "backward")
-# AIC=3396.51
-# hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + 
-#   hai_6_training$hospital_rating + hai_6_training$mortality
+# AIC=3390.25
+#hai_6_training$above_avg_score ~ hai_6_training$mortality
+
 summary(fit_back_step)
 
 
 #look at it!
-plot(fit_for_step)
+plot(fit_back_step)
 
 ###############predict
 
@@ -212,36 +242,42 @@ plot(fit_for_step)
 fit_both_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training), direction = "both")
 # AIC=3390.25
 #hai_6_training$above_avg_score ~ hai_6_training$mortality
+
 summary(fit_both_step)
 
 #look at it!
-plot(fit_for_step)
+plot(fit_both_step)
 
 ###############predict
-pred_for_step <- predict(fit_for_step, type = "response")
-pred_for_step
+pred_both_step <- predict(fit_both_step, type = "response")
+pred_both_step
 
 #tf_pred_for_step <- pred_for_step
-predictions <- ifelse(pred_for_step > 0.5, TRUE, FALSE) 
-predictions
-train_cfm <- confusionMatrix(predictions, hai_6_training$above_avg_score)
+both_predictions <- ifelse(pred_both_step > 0.5, TRUE, FALSE) 
+both_predictions
+train_cfm <- confusionMatrix(both_predictions, hai_6_training$above_avg_score)
 train_cfm
-# Accuracy : 0.5476          
-# 95% CI : (0.5277, 0.5675)
-# No Information Rate : 0.5375          
-# P-Value [Acc > NIR] : 0.1607          
+#          Reference
+# Prediction FALSE TRUE
+# FALSE  1166  963
+# TRUE    154  173
 # 
-# Kappa : 0.0403          
-# Mcnemar's Test P-Value : <2e-16          
-#                                           
-#             Sensitivity : 0.9000          
-#             Specificity : 0.1382          
-#          Pos Pred Value : 0.5482          
-#          Neg Pred Value : 0.5433          
-#              Prevalence : 0.5375          
-#          Detection Rate : 0.4837          
-#    Detection Prevalence : 0.8823          
-#       Balanced Accuracy : 0.5191          
+# Accuracy : 0.5452         
+# 95% CI : (0.5253, 0.565)
+# No Information Rate : 0.5375         
+# P-Value [Acc > NIR] : 0.2271         
+# 
+# Kappa : 0.0375         
+# Mcnemar's Test P-Value : <2e-16         
+#                                          
+#             Sensitivity : 0.8833         
+#             Specificity : 0.1523         
+#          Pos Pred Value : 0.5477         
+#          Neg Pred Value : 0.5291         
+#              Prevalence : 0.5375         
+#          Detection Rate : 0.4748         
+#    Detection Prevalence : 0.8669         
+#       Balanced Accuracy : 0.5178          
         
 #table(pred = pred_for_step, hai_6_training$above_avg_score)
 #table(pred = pred_for_step)
@@ -256,14 +292,14 @@ train_cfm
 # print(metrics.accuracy_score(y_test, y_pred_class))
 
 ###############test predictions
-test_pred_for_step <- predict(fit_for_step, newdata = hai_6_testing$above_avg_score, type = "response")
-test_pred_for_step
+test_pred_both_step <- predict(fit_both_step, newdata = hai_6_testing$above_avg_score, type = "response")
+test_pred_both_step
 
 #tf_pred_for_step <- pred_for_step
-predictions <- ifelse(pred_for_step > 0.5, TRUE, FALSE) 
+predictions <- ifelse(test_pred_both_step > 0.5, TRUE, FALSE) 
 predictions
 
-test_cfm <- confusionMatrix(predictions, hai_6_testing$above_avg_score)
+test_cfm <- confusionMatrix(test_pred_both_step, hai_6_testing$above_avg_score)
 test_cfm
 
 ###############validate the fit
