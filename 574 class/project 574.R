@@ -1,6 +1,12 @@
-#diabetes <- read.csv("/Users/acc/Documents/IIT/Spring 2018/Bayesian Comp Stats/diabetes_data")
+library(tidyverse)
+library(statmod)
+library(LaplacesDemon)
 
-sigma2
+
+
+
+diabetes <- read.csv("/Users/acc/Documents/IIT/Spring 2018/Bayesian Comp Stats/diabetes_data")
+
 
 
 #=========================
@@ -39,23 +45,34 @@ for(k in 1:nmax) {
   sigma2 <- sigma2_sample[k]
   beta <- beta_sample[k,]
   
-  invg_size <- sqrt(lambda^2*sigma2/beta[j]^2)
-  mu <- lambda^2
-  inv_tau2 <- rinvgauss(invg_size, mu)
+  for(j in 1:p) {
+    invgauss_size <- sqrt(lambda^2*sigma2/beta[j]^2)
+    invgauss_mu <- lambda^2
+    inv_tau2 <- rinvgauss(1, mean = invgauss_size, invgauss_mu)
+    tau_sample[k,j] <- (1/(1/inv_tau2))
+  }
+  
+  invgam_n <- (n-1)/2 + p/2
+  invgam_shape <- 
+    t(res_sigma - X %*% beta_ls) %*% (res_sigma - X %*% beta_ls) / 2 + 
+    t(beta_ls) %*% solve(diag(tau_sample[k,])) %*% beta_ls/2
+  sigma2 <- rinvgamma(1, scale = invgam_n, shape = invgam_shape)
+  sigma2_sample <- c(sigma2_sample, sigma2)
+  
+  
+  A <- t(X)%*%X + diag(tau_sample[k,])
+  
+  int_val <- t(X) * res_sigma
+  norm_mean <- solve(A) %*% int_val
+  
+  norm_var <- sigma2 * solve(A)
+  
+  beta <- rnorm(1, mean = norm_mean, sd = norm_var)
+  beta_sample[k+1,] <- beta
+  
+  tau_mean <- colMeans(tau_sample)
+  lambda <- sqrt(2*p/sum(tau_mean))
+  lambda_sample <- c(lambda_sample, lambda)
 }
 
-lambda <- lambda_sample[1]
-sigma2 <- sigma2_sample[1]
-beta <- beta_sample[1,]
 
-invg_size <- sqrt(lambda^2*sigma2/beta[1]^2)
-mu <- lambda^2
-
-inv_tau2 <- rinvgauss(1, invg_size, mu)
-
-
-Dtau <- 
-
-betas <- dnorm((1/A)(t(X)))
-
-A <- t(X)%*%X + 1/Dtau
