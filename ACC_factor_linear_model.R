@@ -6,7 +6,7 @@ hai_6_all_data <- hai_reduced_spread_nona %>%
   inner_join(pay_val_care_recoded, by = "provider_id") %>%
   filter(Measure == "HAI_6" & !is.na(SIR_score) & payment_measure_id == "PAYM_30_PN", 
          hospital_owner != "Tribal" & hospital_type != "Childrens") %>%
-  select(hospital_type, hospital_owner, hospital_rating = hospital_overall_rating, 
+  select(provider_id, hospital_type, hospital_owner, hospital_rating = hospital_overall_rating, 
          mortality = mortality_code, readmission = readmission_code, effectiveness = effectiveness_of_care_code, 
          timeliness = timeliness_of_care_code, patient_exp = patient_experience_code, 
          sir_comp = SIR_compared_to_national_code, sir_score = SIR_score, spend_score, payment, 
@@ -78,3 +78,4 @@ plot(hai_6_all_data_nona$spend_score, resid(for_step_inter_trans))
 
 # try spend_score transformation
 plot(hai_6_all_data_nona$spend_score, hai_6_all_data_nona$sir_score)
+
