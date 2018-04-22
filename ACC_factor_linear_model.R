@@ -1,4 +1,4 @@
-
+library(car)
 # combine all the data for providers with HAI 6 SIR scores and pneumonia payment category, no tribal or childrens
 hai_6_all_data <- hai_reduced_spread_nona %>%
   inner_join(hosp_gen_info_recoded, by = "provider_id") %>%
@@ -62,8 +62,19 @@ for_step_inter_trans <- lm(I(sir_score^2) ~ hospital_type + hospital_owner + mor
                             )
 summary(for_step_inter_trans)
 
-plot(for_step_inter_trans, which=c(1,2,4,5))
+trun_mod <- lm(I(sir_score^2) ~ spend_score, data = hai_6_all_data_nona)
+
+plot(trun_mod, which = c(1,2,4,5))
+
+leveragePlots(trun_mod)
+qqPlot(trun_mod, main="QQ Plot")
+outlierTest(trun_mod)
+
+cutoff <- 4/((nrow(hai_6_all_data_nona)-length(trun_mod$coefficients)-2)) 
+plot(trun_mod, which = 4, cook.levels = cutoff)
+
+plot(hai_6_all_data_nona$spend_score, resid(for_step_inter_trans))
 
 
 # try spend_score transformation
-plot(log10(hai_6_all_data_nona$spend_score), hai_6_all_data_nona$sir_score)
+plot(hai_6_all_data_nona$spend_score, hai_6_all_data_nona$sir_score)
