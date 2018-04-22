@@ -15,6 +15,16 @@ hai_sir %>%
   filter(!is.na(score)) %>%
   select(score)
 
+# count hospitals per HAI Measure score not NA
+hai_measures_plot <- hai_sir %>%
+  filter(!is.na(score)) %>%
+  count(provider_id, Measure)
+
+ggplot(hai_measures_plot, aes(Measure)) +
+  geom_bar() +
+  labs(title = "Count of Providers Reporting per Measure", y = "Provider Count")
+
+
 # there are 1633 with score of 0.000
 hai_reduced %>% 
   filter(score == "0.000") %>%
