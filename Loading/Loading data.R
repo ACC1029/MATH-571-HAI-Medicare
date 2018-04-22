@@ -225,7 +225,7 @@ no_score_providers <- hai_sir %>%
 
 # HAI: recode compared to national
 hai_reduced_spread <- hai_reduced_spread %>%
-  mutate(SIR_compared_to_national_code = recode(SIR_compared_to_national, 
+  mutate(SIR_compared_to_national_code = dplyr::recode(SIR_compared_to_national, 
                                                 "No Different than National Benchmark" = 0,
                                                 "Better than the National Benchmark" = 1,
                                                 "Worse than the National Benchmark" = -1)
@@ -240,31 +240,31 @@ hai_reduced_spread_nona <- hai_reduced_spread %>%
 
 # Hosp gen info: Recode variables with national comparisons
 hosp_gen_info_recoded <- hosp_gen_info_reduced %>%
-  mutate(mortality_code = recode(mortality, 
+  mutate(mortality_code = dplyr::recode(mortality, 
                                  "Above the national average" = 1,
                                  "Same as the national average" = 0, 
                                  "Below the national average" = -1),
-         safety_of_care_code = recode(safety_of_care,
+         safety_of_care_code = dplyr::recode(safety_of_care,
                                       "Above the national average" = 1,
                                       "Same as the national average" = 0,
                                       "Below the national average" = -1),
-         patient_experience_code = recode(patient_experience,
+         patient_experience_code = dplyr::recode(patient_experience,
                                           "Above the national average" = 1,
                                           "Same as the national average" = 0,
                                           "Below the national average" = -1),
-         timeliness_of_care_code = recode(timeliness_of_care,
+         timeliness_of_care_code = dplyr::recode(timeliness_of_care,
                                           "Above the national average" = 1,
                                           "Same as the national average" = 0,
                                           "Below the national average" = -1),
-         readmission_code = recode(readmission,
+         readmission_code = dplyr::recode(readmission,
                                    "Above the national average" = 1,
                                    "Same as the national average" = 0,
                                    "Below the national average" = -1),
-         effectiveness_of_care_code = recode(effectiveness_of_care,
+         effectiveness_of_care_code = dplyr::recode(effectiveness_of_care,
                                              "Above the national average" = 1,
                                              "Same as the national average" = 0,
                                              "Below the national average" = -1),
-         efficient_use_of_medical_imaging_code = recode(efficient_use_of_medical_imaging,
+         efficient_use_of_medical_imaging_code = dplyr::recode(efficient_use_of_medical_imaging,
                                                         "Above the national average" = 1,
                                                         "Same as the national average" = 0,
                                                         "Below the national average" = -1)
@@ -288,12 +288,12 @@ pay_val_care_reduced <- pay_val_care_reduced %>%
 
 # Payment value of care: Recode ordered categories. I think it's ok to ignore payment level in value of care category because it's captured in the payment category.
 pay_val_care_recoded <- pay_val_care_reduced %>%
-  mutate(payment_category_code = recode(payment_category,
+  mutate(payment_category_code = dplyr::recode(payment_category,
                                         "Greater than the National Average Payment" = 1,
                                         "No different than the national average payment" = 0,
                                         "Less than the National Average Payment" = -1,
                                         "Number of Cases Too Small" = -2),
-         value_of_care_category_code = recode(value_of_care_category,
+         value_of_care_category_code = dplyr::recode(value_of_care_category,
                                               "Average complications and higher payment" = 0,
                                               "Average complications and average payment" = 0,
                                               "Average complications and lower payment " = 0,
