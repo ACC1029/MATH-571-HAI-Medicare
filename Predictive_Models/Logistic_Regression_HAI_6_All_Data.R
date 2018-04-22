@@ -10,14 +10,16 @@ library(ggplot2)
 #load the CSV provided by Anna, housed in the git repository, as a tibble
 hai_6_all_data_nona <- read_csv("hai_6_all_data_nona.csv")
 
+
 ###############make sure the categorical values are factors
-hai_6_all_data_nona$mortality_code <- factor(hai_6_all_data_nona$mortality_code)
-hai_6_all_data_nona$readmission_code <- factor(hai_6_all_data_nona$readmission_code)
-hai_6_all_data_nona$effectiveness_of_care_code <- factor(hai_6_all_data_nona$effectiveness_of_care_code)
-hai_6_all_data_nona$timeliness_of_care_code <- factor(hai_6_all_data_nona$timeliness_of_care_code)
-hai_6_all_data_nona$patient_experience_code <- factor(hai_6_all_data_nona$patient_experience_code)
-hai_6_all_data_nona$SIR_compared_to_national_code <- factor(hai_6_all_data_nona$SIR_compared_to_national_code)
-hai_6_all_data_nona$value_of_care_category_code <- factor(hai_6_all_data_nona$value_of_care_category_code)
+##commenting this out now that I'm pulling from Anna's latest code where this is factor-zed 
+# hai_6_all_data_nona$mortality <- factor(hai_6_all_data_nona$mortality)
+# hai_6_all_data_nona$readmission <- factor(hai_6_all_data_nona$readmission)
+# hai_6_all_data_nona$effectiveness <- factor(hai_6_all_data_nona$effectiveness)
+# hai_6_all_data_nona$timeliness <- factor(hai_6_all_data_nona$timeliness)
+# hai_6_all_data_nona$patient_exp <- factor(hai_6_all_data_nona$patient_exp)
+# hai_6_all_data_nona$sir_comp <- factor(hai_6_all_data_nona$sir_comp)
+# hai_6_all_data_nona$val_care_cat <- factor(hai_6_all_data_nona$val_care_cat)
 
 ###############recode
 #look at the distribution of scores
@@ -104,21 +106,21 @@ ggplot(data=hai_6_training, aes(hai_6_training$hospital_type)) +
 ggplot(data=hai_6_testing, aes(hai_6_testing$hospital_type)) + 
   theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
 
-##hospital_overall_rating
+##hospital_rating
 #train
-ggplot(data=hai_6_training, aes(hai_6_training$hospital_overall_rating)) + 
+ggplot(data=hai_6_training, aes(hai_6_training$hospital_rating)) + 
   theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
 #test
-ggplot(data=hai_6_testing, aes(hai_6_testing$hospital_overall_rating)) + 
+ggplot(data=hai_6_testing, aes(hai_6_testing$hospital_rating)) + 
   theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
 
 ##hospital owner
 #train
-ggplot(data=hai_6_training, aes(hai_6_training$mortality_code)) + 
+ggplot(data=hai_6_training, aes(hai_6_training$mortality)) + 
   theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
 
 #test
-ggplot(data=hai_6_testing, aes(hai_6_testing$mortality_code)) + 
+ggplot(data=hai_6_testing, aes(hai_6_testing$mortality)) + 
   theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
 
 #I'd like to get this all onto one plot, but it's taking more fiddling than I want to do right now
@@ -129,9 +131,9 @@ ggplot(data=hai_6_testing, aes(hai_6_testing$mortality_code)) +
 # geom_histogram(data = hai_6_all_data_nona, stat = "count", fill = "green", alpha = 0.2)  
 
 ###############create the logistic regression with all the factors
-form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + hai_6_training$hospital_overall_rating + hai_6_training$mortality_code 
-  + hai_6_training$readmission_code + hai_6_training$effectiveness_of_care_code + hai_6_training$effectiveness_of_care_code + hai_6_training$timeliness_of_care_code 
-  + hai_6_training$spend_score + hai_6_training$payment + hai_6_training$value_of_care_category_code
+form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + hai_6_training$hospital_rating + hai_6_training$mortality 
+  + hai_6_training$readmission + hai_6_training$effectiveness + hai_6_training$timeliness 
+  + hai_6_training$spend_score + hai_6_training$payment + hai_6_training$val_care_cat
 
   
 fit_all_fact <- glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training)
@@ -155,15 +157,15 @@ table(pred = pred_all_fact, true = hai_6_training$above_avg_score)
 
 
 ###############create the logistic regression using forward stepwise feature selection
-# form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_type+ hai_6_training$hospital_owner+ hai_6_training$mortality_code+ hai_6_training$readmission_code+
-# hai_6_training$effectiveness_of_care_code+ hai_6_training$timeliness_of_care_code+ 
-# hai_6_training$patient_experience_code+ hai_6_training$spend_score
+# form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_type+ hai_6_training$hospital_owner+ hai_6_training$mortality+ hai_6_training$readmission+
+# hai_6_training$effectiveness+ hai_6_training$timeliness+ 
+# hai_6_training$patient_exp+ hai_6_training$spend_score
 
 
 fit_for_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training), direction = "forward")
 # AIC=3396.51
 # hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + 
-#   hai_6_training$hospital_overall_rating + hai_6_training$mortality_code
+#   hai_6_training$hospital_rating + hai_6_training$mortality
 
 summary(fit_for_step)
 
@@ -179,15 +181,15 @@ plot(fit_for_step)
 ###############validate the fit
 
 ###############create the logistic regression using backward stepwise feature selection
-# form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_type+ hai_6_training$hospital_owner+ hai_6_training$mortality_code+ hai_6_training$readmission_code+
-# hai_6_training$effectiveness_of_care_code+ hai_6_training$timeliness_of_care_code+ 
-# hai_6_training$patient_experience_code+ hai_6_training$spend_score
+# form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_type+ hai_6_training$hospital_owner+ hai_6_training$mortality+ hai_6_training$readmission+
+# hai_6_training$effectiveness+ hai_6_training$timeliness+ 
+# hai_6_training$patient_exp+ hai_6_training$spend_score
 
 
 fit_back_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training), direction = "backward")
 # AIC=3396.51
 # hai_6_training$above_avg_score ~ hai_6_training$hospital_owner + 
-#   hai_6_training$hospital_overall_rating + hai_6_training$mortality_code
+#   hai_6_training$hospital_rating + hai_6_training$mortality
 summary(fit_back_step)
 
 
@@ -202,14 +204,14 @@ plot(fit_for_step)
 ###############validate the fit
 
 ###############create the logistic regression using bidirectional stepwise feature selection
-# form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_type+ hai_6_training$hospital_owner+ hai_6_training$mortality_code+ hai_6_training$readmission_code+
-# hai_6_training$effectiveness_of_care_code+ hai_6_training$timeliness_of_care_code+ 
-# hai_6_training$patient_experience_code+ hai_6_training$spend_score
+# form_all_fact <- hai_6_training$above_avg_score ~ hai_6_training$hospital_type+ hai_6_training$hospital_owner+ hai_6_training$mortality+ hai_6_training$readmission+
+# hai_6_training$effectiveness+ hai_6_training$timeliness+ 
+# hai_6_training$patient_exp+ hai_6_training$spend_score
 
 
 fit_both_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_training), direction = "both")
 # AIC=3390.25
-#hai_6_training$above_avg_score ~ hai_6_training$mortality_code
+#hai_6_training$above_avg_score ~ hai_6_training$mortality
 summary(fit_both_step)
 
 #look at it!
