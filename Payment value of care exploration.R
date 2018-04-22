@@ -1,9 +1,17 @@
-# makes dollar numeric
-pay_val_care_reduced <- pay_val_care_reduced %>% 
-  mutate(payment = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$payment))),
-         lower_estimate = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$lower_estimate))),
-         higher_estimate = as.numeric(sub(',', '', sub('\\$', '', pay_val_care_reduced$higher_estimate)))
-         )
+# what is the distribution of value_of_care_categories missing values?
+pay_val_care_reduced %>%
+  filter(is.na(value_of_care_category)) %>%
+  count(payment_measure_id, value_of_care_category)
+
+# what is the distribution of payment_categories missing values?
+pay_val_care_reduced %>%
+  filter(is.na(payment_category)) %>%
+  count(payment_measure_id, payment_category)
+
+# what is the distribution of payment_categories missing values?
+pay_val_care_reduced %>%
+  filter(is.na(payment_category)) %>%
+  count(value_of_care_measure, value_of_care_category)
 
 # what are the measure names?
 pay_val_care_reduced %>%
@@ -34,3 +42,5 @@ pay_val_care_reduced %>%
 pay_val_care_reduced %>%
   select(provider_id, value_of_care_category) %>%
   count(value_of_care_category)
+
+# TODO: should we sum the payments per hospital?
