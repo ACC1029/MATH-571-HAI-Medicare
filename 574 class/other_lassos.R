@@ -12,7 +12,7 @@ gibbsBLasso = function(x, y, max.steps = 100000) {
   xy <- t(x) %*% y
   
   r <- 1
-  delta <- 0.1 # 1.78
+  delta <- 1.78
   
   betaSamples <- matrix(0, max.steps, m)
   sigma2Samples <- rep(0, max.steps)
@@ -69,7 +69,7 @@ gibbsBLasso = function(x, y, max.steps = 100000) {
     lambdaSamples[k] <- lambda
   }
   
-#  colMedians(betaSamples[seq(max.steps/2, max.steps, 5), ])
+  #  colMedians(betaSamples[seq(max.steps/2, max.steps, 5), ])
   lambdaSamples
 }
 
