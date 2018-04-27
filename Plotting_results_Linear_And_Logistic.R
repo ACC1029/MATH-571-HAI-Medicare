@@ -24,7 +24,7 @@ i <- i + xlab("Quality Measure")
 i <- i + ylab("Count of Reporting Providers")
 i <- i + labs(title = "Distribution of Reporing Providers With Non-Null Scores Measure", caption = "Based on CMS Hospital Compare data")
 
-i
+
 
 #j <- ggplot(data = hosp_gen_info_raw, aes(hospital_type)) + geom_bar(aes(fill = hosp_gen_info_raw$hospital_owner), position = "dodge")
 j <- ggplot(data = hosp_gen_info_raw, aes(hospital_type)) + geom_bar()
@@ -36,13 +36,21 @@ j <- j + guides(fill = guide_legend(title  = "Hospital Type"))
 j <- j + facet_wrap("hosp_gen_info_raw$hospital_owner")
 j
 
-j <- ggplot(data = hosp_gen_info_raw, aes(hospital_type)) + geom_bar(aes(fill = hosp_gen_info_raw$hospital_owner), position = "dodge")
+j <- ggplot(data = hosp_gen_info_raw, aes(hospital_owner)) + geom_bar(aes(fill = hosp_gen_info_raw$hospital_type), position = "dodge")
 #j <- ggplot(data = hosp_gen_info_raw, aes(hospital_type)) + geom_bar()
+j <- j + xlab("Hospital Owner") 
+j <- j + ylab("Count of Reporting Providers") 
 j <- j + scale_fill_brewer(palette="Set1")
-j <- j + theme(axis.text.x=element_text(angle=45,hjust=1))
+j <- j + theme(axis.text.x=element_text(angle=55,hjust=1))
 j <- j + labs(title = "Providers Reporting CMS Measures", caption = "Based on raw CMS Hospital Compare data")
 j <- j + guides(fill = guide_legend(title  = "Hospital Type"))
 #j <- j + ylim(0,1000)
-j <- j + facet_wrap("hosp_gen_info_raw$hospital_owner")
+#j <- j + facet_wrap("hosp_gen_info_raw$hospital_owner")
 j
 
+temp <- lapply(names(hosp_gen_info_raw),
+               function(x) hist(get(x), data=hosp_gen_info_raw, geom="bar", fill=binary, xlab=x))
+
+for(i in nrow(hosp_gen_info_raw)){
+  print(temp[i])
+}
