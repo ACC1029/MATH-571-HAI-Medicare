@@ -3,6 +3,7 @@ library(mnormt) # rmnorm
 library(VGAM) # rinv.gaussian
 library(miscTools) # colMeans
 library(monomvn)
+library(lars)
 
 gibbsBLasso = function(x, y, max.steps = 100000) {
   n <- nrow(x)
@@ -84,6 +85,10 @@ X <- data.matrix(diabetes_params)
 yX = cbind(y,X)
 yX <- data.frame(yX)
 
-lambdas <- gibbsBLasso(X, y, 10000)
+data(diabetes)
+x <- scale(diabetes$x)
+y <- scale(diabetes$y)
+
+lambdas <- gibbsBLasso(x, y, 100000)
 
 lasso <- blasso(X, y, T=10000)
