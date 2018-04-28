@@ -23,12 +23,13 @@ mspb_reduced %>%
 
 # provider 170201 has the highest score by far
 no_outlier <- mspb_raw %>%
-  filter(score != 2.63)
+  filter(spend_score != 2.63)
 
 
 
-ggplot(no_outlier, aes(measure_id, as.double(score)), xlab = "Measure ID") + 
-  geom_boxplot() +
-  labs(title = "Medicare spending per beneficiary scores", x = "Measure ID", y = "Score")
+ggplot(no_outlier, aes(measure_id, as.double(spend_score)), xlab = "Measure ID") + 
+  geom_boxplot(fill = "red") +
+  labs(title = "Medicare spending per beneficiary scores", x = "Measure ID", y = "Score") + 
+  theme_bw()
 
 # TODO: check outlier -- what other characteristics does the provider have?

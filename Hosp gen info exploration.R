@@ -81,3 +81,18 @@ hosp_gen_info_reduced %>%
 hosp_gen_info_reduced %>%
   select(provider_id, efficient_use_of_medical_imaging) %>%
   count(efficient_use_of_medical_imaging)
+
+
+# Vizualizations and summary stats
+hosp_gen_info_reduced %>%
+  ggplot(aes(x = hospital_type)) + 
+  geom_bar(fill = "red") + 
+  theme_bw() + 
+  labs(title = "Distribution of Hospital Type" , x = "Hospital Type", y = "Count")
+
+hosp_gen_info_reduced %>%
+  ggplot(aes(x = hospital_owner)) + 
+  geom_bar(fill = "red") + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), axis.text = element_text(size = 12)) +
+  labs(title = "Distribution of Hospital Owner" , x = "Hospital Type", y = "Count")

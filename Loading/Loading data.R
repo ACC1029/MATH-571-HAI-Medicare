@@ -318,9 +318,55 @@ pay_val_care_recoded <- pay_val_care_reduced %>%
          payment_category_code = factor(payment_category_code),
          value_of_care_category_code = factor(value_of_care_category_code))
 
-# join all the data together on provider_id
+# join all the data together on provider_id, limit to providers that don't have all na HAIs
 all_data <- hosp_gen_info_reduced %>%  
-  inner_join(hai_reduced, by = c("provider_id" = "provider_id")) %>%
+  inner_join(hai_reduced_spread_nona, by = c("provider_id" = "provider_id")) %>%
   inner_join(pay_val_care_reduced, by = c("provider_id" = "provider_id")) %>%
   inner_join(mspb_reduced, by = c("provider_id" = "provider_id"))
 
+
+propmiss <- function(dataframe) {
+  m <- sapply(dataframe, function(x) {
+    data.frame(
+      nmiss=sum(is.na(x)), 
+      n=length(x), 
+      propmiss=sum(is.na(x))/length(x)
+    )
+  })
+  d <- data.frame(t(m))
+  d <- sapply(d, unlist)
+  d <- as.data.frame(d)
+  d$variable <- row.names(d)
+  row.names(d) <- NULL
+  d <- cbind(d[ncol(d)],d[-ncol(d)])
+  return(d[order(d$propmiss), ])
+}
+
+# get proportions of missing data in other variables for HAI 6 rows
+all_data_hai6 <- hosp_gen_info_reduced %>%  
+  inner_join(hai_reduced_spread_nona, by = c("provider_id" = "provider_id")) %>%
+  inner_join(pay_val_care_reduced, by = c("provider_id" = "provider_id")) %>%
+  inner_join(mspb_reduced, by = c("provider_id" = "provider_id")) %>%
+  filter(Measure == "HAI_6")
+
+hai6_miss <- propmiss(all_data_hai6)
+
+hai6_miss %>%
+  filter(variable == "hospital_overall_rating" | variable == "patient_experience" | 
+           variable == "readmission" | variable == "effectiveness_of_care" | variable == "mortality" |
+           variable == "timeliness_of_care" | variable == "spend_score" | variable == "payment" |
+           variable == "value_of_care_category" | variable == "safety_of_care" | 
+           variable == "efficient_use_of_medical_imaging" | variable == "SIR_compared_to_national" |
+           variable == "SIR_score") %>%
+  ggplot(mapping = aes(x = variable, y = propmiss)) +
+  geom_col(fill = "red") +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), axis.text=element_text(size=15)) +
+  labs(title = "Missing Data by Variable for HAI 6", x = "Variable", y = "Proportion Missing")
+           
+all_data <- hosp_gen_info_reduced %>%  
+  inner_join(hai_reduced_spread_nona, by = c("provider_id" = "provider_id")) %>%
+  inner_join(pay_val_care_reduced, by = c("provider_id" = "provider_id")) %>%
+  inner_join(mspb_reduced, by = c("provider_id" = "provider_id"))
+           
+           

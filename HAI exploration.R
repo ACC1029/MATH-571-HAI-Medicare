@@ -1,8 +1,16 @@
-hai_reduced %>%
-  # filter(is.na(Measure)) %>%
-  select(Measure)
+example <- hai_reduced %>%
+  filter(provider_id == 10001) %>%
+  select(provider_id, measure_id, score)
 
 
+example <- hai_reduced_spread %>%
+  filter(provider_id == 10001) %>%
+  select(provider_id, Measure, CI_LOWER_score, CI_UPPER_score, DOPC_DAYS_score, 
+         ELIGCASES_score, NUMERATOR_score, SIR_score
+         )
+
+hai_reduced_spread %>%
+  filter(is.na(SIR_score))
 
 # there are 17116 missing SIR scores
 hai_sir %>% 
@@ -30,9 +38,7 @@ hai_reduced %>%
   filter(score == "0.000") %>%
   arrange(provider_id)
 
-ggplot(hai_sir, (aes(Measure, as.double(score)))) + 
-  geom_boxplot() +
-  labs(title = "SIR Score per Measure", x = "Measure", y = "Score")
+
 
 # TODO: remove NAs for this plot
 ggplot(hai_sir, aes(Measure)) + 
@@ -55,15 +61,6 @@ hai_sir %>%
             IQR = IQR(as.double(score)),
             min = min(as.double(score)), max = max(as.double(score))
             )
-
-#4,806 hospitals
-unique(filter(hai_reduced)[,c("provider_id")])
-
-# 36 different measures
-unique(filter(hai_reduced)[,c("measure_id", "measure_name")])
-
-# 6 different SIR measures
-unique(filter(hai_reduced, Type == "SIR")[,c("Measure", "measure_name")])
 
 # how many measures are there per provider -- 36 for all
 hai_reduced %>%
@@ -127,7 +124,20 @@ arrange(provider_id)
 yes_score_measures
 
 
-# HAI missing
-
+# Vizualizations and summary stats
 hai_reduced_spread %>%
   filter(Measure == "HAI_6" & is.na(SIR_score))
+
+hai_reduced_spread %>%
+  filter(!is.na(SIR_score)) %>%
+  ggplot(aes(Measure, SIR_score)) + 
+  geom_boxplot(fill = "red") +
+  labs(title = "SIR Score per Measure", x = "Quality Measure", y = "Score") + 
+  theme_bw()
+  
+hai_reduced_spread %>%
+  filter(!is.na(SIR_score)) %>%
+  ggplot(mapping = aes(x = Measure)) +
+  geom_bar(fill = "red") + 
+  theme_bw() +
+  labs(x = "Quality Measure", y = "Count of Reporting Providers", title = "HAI Score Distribution of Reporting Providers")

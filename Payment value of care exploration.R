@@ -23,11 +23,6 @@ pay_val_care_reduced %>%
   select(provider_id, payment_category) %>%
   count(payment_category)
 
-# distribution of payment
-ggplot(pay_val_care_reduced, aes(provider_id, payment)) +
-  labs(x = "Provider ID", y = "Payment") + 
-  geom_boxplot() 
-
 # what are the value of care display names?
 pay_val_care_reduced %>%
   select(provider_id, value_of_care_display_name) %>%
@@ -43,4 +38,11 @@ pay_val_care_reduced %>%
   select(provider_id, value_of_care_category) %>%
   count(value_of_care_category)
 
-# TODO: should we sum the payments per hospital?
+
+# Vizualizations and summary stats
+
+# distribution of payment
+ggplot(pay_val_care_reduced, aes(payment_measure_id, payment)) +
+  labs(title = "Payment per Payment Measure", x = "Payment Measure", y = "Payment Amount") + 
+  geom_boxplot(fill = "red") +
+  theme_bw()

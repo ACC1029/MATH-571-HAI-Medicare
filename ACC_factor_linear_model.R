@@ -1,4 +1,6 @@
 library(car)
+library(broom)
+
 # combine all the data for providers with HAI 6 SIR scores and pneumonia payment category, no tribal or childrens
 hai_6_all_data <- hai_reduced_spread_nona %>%
   inner_join(hosp_gen_info_recoded, by = "provider_id") %>%
@@ -57,6 +59,10 @@ for_step_inter_trans <- lm(I(sir_score^2) ~ hospital_type + hospital_owner + hos
                             )
 summary(for_step_inter_trans)
 
+coefficients(for_step_inter_trans)
+
+plot(for_step_inter_trans)
+
 trun_mod <- lm(I(sir_score^2) ~ spend_score, data = hai_6_all_data_nona)
 
 leveragePlots(trun_mod)
@@ -68,7 +74,17 @@ plot(trun_mod, which = 4, cook.levels = cutoff)
 
 plot(hai_6_all_data_nona$spend_score, resid(for_step_inter_trans))
 
-
-# try spend_score transformation
 plot(hai_6_all_data_nona$spend_score, hai_6_all_data_nona$sir_score)
 
+ggplot(hai_6_all_data_nona, aes(x = spend_score, y = sir_score)) + geom_point() + 
+  labs(x = "Spend Score", y = "HAI 6 SIR Score", title = "Spending vs. HAI 6 Score")
+
+predict(for_step_inter_trans, hai_6_all_data_nona, interval="confidence")
+
+df <- augment(for_step_inter_trans)
+ggplot(df, aes(x = .fitted, y = .resid)) + geom_point() +
+  labs(x = "Fitted", y = "Residuals", title = "Fitted vs. Residuals")
+
+
+ggplot(data=hai_6_training, aes(hai_6_training$hospital_owner)) + 
+  theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
