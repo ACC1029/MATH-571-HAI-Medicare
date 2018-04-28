@@ -49,7 +49,7 @@ hai_6_nona_recoded %>%
 
 ###############create the logistic regression with all the factors
 form_all_fact <- hai_6_nona_recoded$above_avg_score ~ hai_6_nona_recoded$hospital_owner + hai_6_nona_recoded$hospital_type + hai_6_nona_recoded$hospital_rating + hai_6_nona_recoded$mortality 
-+ hai_6_nona_recoded$readmission + hai_6_nona_recoded$effectiveness + hai_6_nona_recoded$timeliness 
++ hai_6_nona_recoded$readmission + hai_6_nona_recoded$effectiveness + hai_6_nona_recoded$timeliness +  hai_6_all_data_nona$patient_exp
 + hai_6_nona_recoded$spend_score + hai_6_nona_recoded$payment + hai_6_nona_recoded$val_care_cat
 
 
@@ -98,10 +98,15 @@ train_all_cfm
 #                                           
 #        'Positive' Class : FALSE
 
+###############Some tests of the goodness of fit
+with(fit_all_fact, null.deviance - deviance)
+with(fit_all_fact, df.null - df.residual)
+with(fit_all_fact, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+
 ###############create the logistic regression with forward stepwise feature selection
 fit_for_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_nona_recoded), direction = "forward")
 summary(fit_for_step)
-#Start:  AIC=4240.33
+#Start:  AIC=4240.3
 # hai_6_nona_recoded$above_avg_score ~ hai_6_nona_recoded$hospital_owner + 
 #   hai_6_nona_recoded$hospital_type + hai_6_nona_recoded$hospital_rating + 
 #   hai_6_nona_recoded$mortality
@@ -142,18 +147,23 @@ for_cfm
 #       Balanced Accuracy : 0.5246          
 #                                           
 #        'Positive' Class : FALSE    
+###############Some tests of the goodness of fit
+with(fit_for_step, null.deviance - deviance)
+with(fit_for_step, df.null - df.residual)
+with(fit_for_step, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+
 
 ###############create the logistic regression with backward stepwise feature selection
 fit_back_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_nona_recoded), direction = "backward")
 summary(fit_back_step)
 #Start:  AIC=4231.9
-# hai_6_nona_recoded$above_avg_score ~ hai_6_nona_recoded$hospital_owner + 
-#   hai_6_nona_recoded$hospital_type + hai_6_nona_recoded$hospital_rating + 
-#   hai_6_nona_recoded$mortality
+# hai_6_nona_recoded$mortality
 
 
 #look at it!
 plot(fit_back_step)
+
+coef(fit_back_step)
 
 ###############predict with backward selected model
 pred_back_step <- predict(fit_back_step, type="response")
@@ -189,6 +199,10 @@ back_cfm
 #       Balanced Accuracy : 0.5191          
 #                                           
 #        'Positive' Class : FALSE     
+###############Some tests of the goodness of fit
+with(fit_back_step, null.deviance - deviance)
+with(fit_back_step, df.null - df.residual)
+with(fit_back_step, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
 
 ###############create the logistic regression with bidirectional stepwise feature selection
 fit_both_step <- step(glm(formula = form_all_fact, family = binomial(link = "logit"), data =  hai_6_nona_recoded), direction = "both")
@@ -260,3 +274,18 @@ logi.hist.plot2(hai_6_nona_recoded$spend_score, hai_6_nona_recoded$above_avg_sco
 # 
 # best.subset.by.bic <- which.min(best.subset.summary$bic)
 # best.subset.by.bic
+###############Some tests of the goodness of fit
+with(fit_both_step, null.deviance - deviance)
+with(fit_both_step, df.null - df.residual)
+with(fit_both_step, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+
+####################
+plot(hai_6_nona_recoded$mortality, hai_6_nona_recoded$above_avg_score)
+hist(as.numeric(hai_6_nona_recoded$mortality), hai_6_nona_recoded$above_avg_score)
+
+ggplot(data=hai_6_nona_recoded, aes(hai_6_nona_recoded$mortality)) + geom_bar(aes(fill = hai_6_nona_recoded$above_avg_score), position = "dodge")
+
+ggplot(data=hai_6_nona_recoded, aes(hai_6_nona_recoded$above_avg_score)) + geom_bar(aes(fill = hai_6_nona_recoded$mortality), position = "dodge")
+
+
+       
