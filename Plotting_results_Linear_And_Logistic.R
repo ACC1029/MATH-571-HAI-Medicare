@@ -7,8 +7,8 @@ library(RColorBrewer)
 p <- ggplot(data=hai_6_nona_recoded, aes(hai_6_nona_recoded$mortality)) + geom_bar(aes(fill = hai_6_nona_recoded$above_avg_score), position = "dodge") + scale_fill_brewer(palette="Set1")
 p <- p + xlab("Mortality Compared To Average") 
 p <- p + ylab("Count of Reporting Providers") 
-p <- p + labs(title = "Distribution of Reporing Providers by HAI 6 SIR Scores and Mortality Scores", caption = "Based on cleaned CMS Hospital Compare data where HAI 6 SIR was reported, excluding providers with Tribal ownership or Children's type",legend = "HAI 6 Score Compared To National Average")
-p <- p + guides(fill = guide_legend(title  = "HAI 6 Score Compared To National Average"))
+# p <- p + labs(title = "Distribution of Reporing Providers by HAI 6 SIR Scores and Mortality Scores", caption = "Based on cleaned CMS Hospital Compare data where HAI 6 SIR was reported, excluding providers with Tribal ownership or Children's type",legend = "HAI 6 Score Compared To National Average")
+p <- p + guides(fill = guide_legend(title  = "HAI 6 Score Above/Below Mean")) + theme_bw()
 
 p
 

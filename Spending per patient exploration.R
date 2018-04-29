@@ -32,4 +32,12 @@ ggplot(no_outlier, aes(measure_id, as.double(spend_score)), xlab = "Measure ID")
   labs(title = "Medicare spending per beneficiary scores", x = "Measure ID", y = "Score") + 
   theme_bw()
 
+# summary of spending
+no_outlier %>%
+  filter(spend_score != "Not Available") %>%
+  summarise(mean = mean(as.double(spend_score)), sd = sd(as.double(spend_score)),
+            IQR = IQR(as.double(spend_score)),
+            min = min(as.double(spend_score)), max = max(as.double(spend_score))
+  )
+
 # TODO: check outlier -- what other characteristics does the provider have?

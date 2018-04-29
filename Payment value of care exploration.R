@@ -46,3 +46,14 @@ ggplot(pay_val_care_reduced, aes(payment_measure_id, payment)) +
   labs(title = "Payment per Payment Measure", x = "Payment Measure", y = "Payment Amount") + 
   geom_boxplot(fill = "red") +
   theme_bw()
+
+# summary of SIR
+pay_val_care_reduced %>%
+  filter(!is.na(payment)) %>%
+  group_by(payment_measure_id) %>%
+  summarise(mean = mean(as.double(payment)), sd = sd(as.double(payment)),
+            IQR = IQR(as.double(payment)),
+            min = min(as.double(payment)), max = max(as.double(payment))
+  )
+
+

@@ -1,5 +1,7 @@
 library(car)
 library(broom)
+library(ggfortify)
+library(ggplot2)
 
 # combine all the data for providers with HAI 6 SIR scores and pneumonia payment category, no tribal or childrens
 hai_6_all_data <- hai_reduced_spread_nona %>%
@@ -49,6 +51,15 @@ initial_back_step <- lm(sir_score ~ hospital_type + hospital_rating + timeliness
 summary(initial_back_step)
 
 
+for_step_inter <- lm(sir_score ~ hospital_type + hospital_owner + hospital_rating + 
+                             mortality + readmission + effectiveness + timeliness + patient_exp + 
+                             spend_score + payment + val_care_cat + hospital_owner:spend_score + 
+                             hospital_type:hospital_owner + hospital_type:readmission + 
+                             hospital_type:patient_exp + hospital_owner:timeliness + hospital_rating:spend_score + 
+                             hospital_type:mortality + readmission:payment + hospital_rating:effectiveness, 
+                           data = hai_6_all_data_nona
+)
+
 for_step_inter_trans <- lm(I(sir_score^2) ~ hospital_type + hospital_owner + hospital_rating + 
                              mortality + readmission + effectiveness + timeliness + patient_exp + 
                              spend_score + payment + val_care_cat + hospital_owner:spend_score + 
@@ -76,15 +87,23 @@ plot(hai_6_all_data_nona$spend_score, resid(for_step_inter_trans))
 
 plot(hai_6_all_data_nona$spend_score, hai_6_all_data_nona$sir_score)
 
-ggplot(hai_6_all_data_nona, aes(x = spend_score, y = sir_score)) + geom_point() + 
-  labs(x = "Spend Score", y = "HAI 6 SIR Score", title = "Spending vs. HAI 6 Score")
+ggplot(hai_6_all_data_nona, aes(x = spend_score, y = sir_score)) +
+  geom_point(color = "red", alpha = 0.5) +
+  labs(x = "Spend Score", y = "HAI 6 SIR Score", title = "Spending vs. HAI 6 Score") +
+  theme_bw()
 
 predict(for_step_inter_trans, hai_6_all_data_nona, interval="confidence")
 
 df <- augment(for_step_inter_trans)
-ggplot(df, aes(x = .fitted, y = .resid)) + geom_point() +
-  labs(x = "Fitted", y = "Residuals", title = "Fitted vs. Residuals")
+ggplot(df, aes(x = .fitted, y = .resid)) +
+  geom_point(color = "red", alpha = 0.3) +
+  labs(x = "Fitted", y = "Residuals", title = "Fitted vs. Residuals") +
+  theme_bw()
 
 
-ggplot(data=hai_6_training, aes(hai_6_training$hospital_owner)) + 
-  theme(axis.text.x=element_text(angle=90,hjust=1)) + geom_histogram(stat = "count")
+ggplot(data = hai_6_training, aes(hai_6_training$hospital_owner)) + 
+  theme(axis.text.x = element_text(angle = 90,hjust = 1)) + geom_histogram(stat = "count")
+
+autoplot(for_step_inter, which = 4, label.size = 3) +
+  theme_bw() +
+  geom_point(color = "red", alpha = 0.2)

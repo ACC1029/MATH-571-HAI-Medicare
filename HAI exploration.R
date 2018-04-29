@@ -138,6 +138,11 @@ hai_reduced_spread %>%
 hai_reduced_spread %>%
   filter(!is.na(SIR_score)) %>%
   ggplot(mapping = aes(x = Measure)) +
-  geom_bar(fill = "red") + 
+  geom_bar(aes(fill = Measure)) + 
   theme_bw() +
   labs(x = "Quality Measure", y = "Count of Reporting Providers", title = "HAI Score Distribution of Reporting Providers")
+
+p <- ggplot(hai_6_all_data, aes(x = Rank, y = value, fill = variable)) +
+  geom_bar(stat = "hospital_type")
+
+p <- ggplotly(p)
